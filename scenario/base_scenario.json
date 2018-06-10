@@ -1,0 +1,9 @@
+{
+    "idle": {"prev_st": "ended", "action": "idle"},
+    "face_flag": {"prev_st": "idle", "action": "face_flag"},
+    "changing_room": {"prev_st": "face_flag", "action": "changing_room"},
+    "warm_up": {"prev_st": "changing_room", "action": "warm_up"},
+    "match_started": {"prev_st": "warm_up", "action": "match_started"},
+    "match_ended": {"prev_st": "match_started", "action": "match_ended"},
+    "ended": {"prev_st": "match_ended", "action": "ended"}
+}

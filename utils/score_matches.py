@@ -16,10 +16,10 @@ championats = {'Англия, Премьер лига': '12',
                }
 
 
-class Score_Matches:
+class ScoreMatches:
     '''
         example:
-            score = Score_Matches()
+            score = ScoreMatches()
             score.get_matches('Чемпионат Мира' , '2018-6-14')
             
     '''

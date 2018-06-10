@@ -1,4 +1,6 @@
 import front_end as fe
+import json
+import photolab_api as pl
 
 class User():
 
@@ -7,22 +9,30 @@ class User():
     _current_lovely_team = ''
     _image_path = ''
     _state = ''
+    _game = None
+    _scenario = {}
 
-    action = {
-        'idle': {'prev_st': 'ended', 'action': print},
-        'ended': {'prev_st': 'idle', 'action': print}
-    }
-
-    def __init__(self, name, image_path, id):
+    def __init__(self, name, image_path, id, scenario_path='scenario/base_scenario.json'):
         self._name = name
         self._image_path = image_path
         self._id = id
+        self.set_scenario(scenario_path)
 
     def change_state(self, state):
-        for st, attr in action.items():
+        for st, attr in self._scenario.items():
             if self._state == st:
                 if state == attr['prev_st']:
-                    attr['action']()
+                    eval(attr['action'])()
+
+    def score_changed(self, delta):
+        if delta:
+            pl.goal_cb()
+        else:
+            pl.miss_cb()
+
+    def set_scenario(self):
+        with open(scenario_path) as f:
+            self._scenario = json.load(f)
         
     def set_lovely_team(self, team):
         self._current_lovely_team = team
