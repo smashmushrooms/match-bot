@@ -78,8 +78,6 @@ class Score_Matches:
 
     def _get_match_score(self):
         
-        self._dict_match = {}
-        
         if not self._url:
             return
 
@@ -117,7 +115,8 @@ class Score_Matches:
         '''
         self._name_of_champ = name_of_champ
         self._date = date
-
+        self._dict_match = {}
+        
         self._get_url()
         if self._url:
             self._get_match_score()
