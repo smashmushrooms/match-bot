@@ -1,15 +1,29 @@
+import front_end as fe
+
 class User():
+
     _name = ''
     _id = ''
     _current_lovely_team = ''
     _image_path = ''
-    _state = 0
+    _state = ''
+
+    action = {
+        'idle': {'prev_st': 'ended', 'action': print},
+        'ended': {'prev_st': 'idle', 'action': print}
+    }
 
     def __init__(self, name, image_path, id):
         self._name = name
         self._image_path = image_path
         self._id = id
-    
+
+    def change_state(self, state):
+        for st, attr in action.items():
+            if self._state == st:
+                if state == attr['prev_st']:
+                    attr['action']()
+        
     def set_lovely_team(self, team):
         self._current_lovely_team = team
 
