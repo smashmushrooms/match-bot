@@ -53,12 +53,9 @@ def receive_message():
                                 dialogs[recipient_id].dialog_update(message)
                             if x['message'].get('attachments'):
                                 if x['message']['attachments'][0]['type'] == 'image':
-                                    response = requests.get(x['message']['attachments'][0]['payload']['url'],
-                                                            stream=True)
+                                    url = x['message']['attachments'][0]['payload']['url']
                                     if dialogs[recipient_id].get_state() == 'choose_match':
-                                        with open(recipient_id + '.png', 'wb') as out_file:
-                                            shutil.copyfileobj(response.raw, out_file)
-                                        dialogs[recipient_id].dialog_update('Thanks! You\'re nice')
+                                        dialogs[recipient_id].get_user().set_url(url)
                                         return "Message Processed"
                                 else:
                                     bot.send_text_message(recipient_id, 'Send your photo please')

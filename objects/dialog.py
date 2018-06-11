@@ -53,7 +53,6 @@ class Dialog:
         bot.send_text_message(self._user.get_id(), text)
         teams = self._game_observer.get_teams()
         buttons = []
-        print(teams)
         for team in teams:
             buttons.append([team[0] + ' - ' + team[1], 'postback'])
 
@@ -89,3 +88,6 @@ class Dialog:
 
     def get_state(self):
         return self._state
+    
+    def get_user(self):
+        return self._user
