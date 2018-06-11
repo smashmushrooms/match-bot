@@ -51,10 +51,10 @@ russian2english = {'Россия': 'Russia',
                    }
 
 
-class ScoreMatches:
+class Score_Matches:
     '''
         example:
-            score = ScoreMatches('Чемпионат Мира' , '2018-6-19')
+            score = Score_Matches('Чемпионат Мира' , '2018-6-19')
             score.get_matches_names()
             >>>[['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Japan']]
 
@@ -89,7 +89,6 @@ class ScoreMatches:
 
         self._dict_match = {}
         self._url = False
-        self._datetime = False
 
         self._get_matches()
 
@@ -99,18 +98,21 @@ class ScoreMatches:
         '''
         if not isinstance(self._date, str):
             print('Date must be str')
+            self._date = False
             return
 
         if len(self._date.split('-')) != 3:
             print('Incorrect date format')
+            self._date = False
             return
 
         year, month, day = np.array(self._date.split('-'), dtype=int)
 
         try:
-            self._datetime = datetime(year, month, day)
+            datetime(year, month, day)
         except Exception as error:
             print(error)
+            self._date = False
             return
 
         self._date = str(year) + '-' + str(month) + '-' + str(day)
@@ -132,7 +134,7 @@ class ScoreMatches:
                 str(time.month) + '-' + str(time.day)
         else:
             self._check_date()
-            if self._datetime == False:
+            if self._date == False:
                 return
 
         self._url = 'http://soccer365.ru/online/&competition_id=' + \
@@ -151,22 +153,26 @@ class ScoreMatches:
         for match in b.select('.game_block'):
             match = match.getText().replace('\t', '').replace('\xa0', '').split('\n')
             match = list(filter(lambda x: x != '', match))
-            time = match[0].replace(' ', '').split(',')[1].split(':')
-            self._datetime = self._datetime.replace(
-                hour=int(time[0]), minute=int(time[1]))
-            try:
-                first_team = russian2english[match[1][:-1]]
-                second_team = russian2english[match[4]]
-            except:
-                print('Team has not yet been determined')
-                return
+
+            time = match[0].replace(' ', '').replace("'", '').split(',')[-1]
+
+            if self._name_of_champ == 'Чемпионат Мира':
+                try:
+                    first_team = russian2english[match[1][:-1]]
+                    second_team = russian2english[match[4]]
+                except:
+                    print('Team has not yet been determined')
+                    return
+            else:
+                first_team = match[1][:-1]
+                second_team = match[4]
             score_first = match[2]
             score_second = match[3]
-            match_name = first_team + '-' + second_team
+            match_name = first_team + '__' + second_team
 
             self._dict_match[match_name] = {'first_team': first_team,
                                             'second_team': second_team,
-                                            'time': self._datetime,
+                                            'time': time,
                                             'score_first': score_first,
                                             'score_second': score_second}
 
@@ -184,7 +190,7 @@ class ScoreMatches:
             Getting a list of all matches on the date.
         '''
         self._names = list(self._dict_match.keys())
-        return [i.split('-') for i in self._names]
+        return [i.split('__') for i in self._names]
 
     def get_score(self, teams):
         '''
@@ -193,23 +199,9 @@ class ScoreMatches:
                 first_team - str
                 second_team - str
         '''
-        match_name = '-'.join(teams)
+        match_name = '__'.join(teams)
         if match_name not in self._names:
             print('This match is not today')
             return {}
         match = self._dict_match[match_name]
         return {'time': match['time'], 'score_first': match['score_first'], 'score_second': match['score_second']}
-
-    def get_match_time(self, teams):
-        '''
-            teams - list:
-                format - [first_team , second_team]
-                first_team - str
-                second_team - str
-        '''
-        match_name = '-'.join(teams)
-        if match_name not in self._names:
-            print('This match is not today')
-            return {}
-        match = self._dict_match[match_name]
-        return {'time': match['time']}
