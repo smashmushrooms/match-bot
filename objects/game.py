@@ -4,16 +4,14 @@ from utils.score_matches import Score_Matches
 
 class Game:
 
-    def __init__(self, teams, time, score):
+    _score_matches = None
+    
+    def __init__(self, teams, time):
         self._teams = teams
         self._time_of_game = time
-        self._score_matches = score
         self._team1_fans = []
         self._team2_fans = []
         self._score = [0, 0]
-        self._teams = []
-        self._time_of_game = None
-        self._score_matches = None
         self._state = 'idle'
 
     def update(self):
@@ -24,7 +22,7 @@ class Game:
         if time == 'Завершен':
             self._state = 'match_ended'
 
-        if response['time'] == '0':
+        if time == '0':
             self._state = 'match_started'
 
         score = [response['score_first'], response['score_second']]

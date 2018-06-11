@@ -27,10 +27,8 @@ class User:
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
         self._id = id
-        self._id = ''
-        self._user_directory = ''
         self._current_lovely_team = ''
-        self._image_path = ''
+        self._image_url = ''
         self._state = 'idle'
         self._scenario = {}
         self.set_scenario(scenario_path)
@@ -39,7 +37,7 @@ class User:
     def change_state(self, state):
         for st, attr in self._scenario.items():
             if self._state == attr['prev_st']:
-                eval(attr['action'])([self._image_path, self._image_path], game.get_teams())
+                eval(attr['action'])([self._image_url, self._image_url], game.get_teams())
                 self._state = state
 
     def score_changed(self, delta):
@@ -55,8 +53,8 @@ class User:
     def set_lovely_team(self, team):
         self._current_lovely_team = team
 
-    def set_photo(self, image_path):
-        self._image_path = image_path
+    def set_image_url(self, url):
+        self._image_url = url
 
     def set_state(self, state):
         self._state = state
@@ -67,8 +65,8 @@ class User:
     def get_current_lovely_team(self):
         return self._current_lovely_team
 
-    def get_image_path(self):
-        return self._image_path
+    def get_image_url(self):
+        return self._image_url
 
     def get_state(self):
         return self._state
