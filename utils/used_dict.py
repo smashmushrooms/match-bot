@@ -1,5 +1,8 @@
+URL = 'http://api-hack.photolab.me/template_process.php'
+
 templates_names = {
-    'versus': '10B527DA-8896-8304-018D-2C24F5492476'
+    'versus': '10B527DA-8896-8304-018D-2C24F5492476',
+    'soccer_man': '4283E3C4-BE89-42A4-D9B5-B775A66F146F'
 }
 
 championats = {'Англия, Премьер лига': '12',
@@ -85,3 +88,16 @@ country_flag = {"Russia": 'http://www.world-globe.ru/files/flags/russia_l.png',
                 'Colombia': 'http://www.world-globe.ru/files/flags/colombia_l.png',
                 'Japan': 'http://www.world-globe.ru/files/flags/japan_l.png'
                 }
+
+city2stadium = {   'Москва': 'https://spartakfanat.ru/gallery/stadion/Otkrytie_Arena_18.jpg',
+                   'Санкт-Петербург': 'http://liport.ru/uploads/posts/2018-01/igor-albin-stadion-sankt-peterburg-budet-peredan-vkoncessiyu-zenitu_1.jpg',
+                   'Калининград': 'https://worldcap2018.ru/wp-content/uploads/2017/02/Vid-na-pole-1.jpg',
+                   'Волгоград': 'https://pbs.twimg.com/media/DUOcZTsXcAAzNM5.jpg',
+                   'Екатеринбург': 'https://media.nakanune.ru/images/pictures/image_big_127972.jpg',
+                   'Казань': 'http://stadiums.at.ua/_nw/306/14515256.jpg',
+                   'Нижний Новгород': 'https://eventticketmaster.com/image/stadiums/stadion-nizhny-novgorod.jpg',
+                   'Ростов-на-Дону': 'http://rostov-arena.ml/wp-content/uploads/2017/10/rostov-arena-vid-nochyu.jpg',
+                   'Самара': 'http://progorodsamara.ru/userfiles/picoriginal/img-20160315175656-159.jpg',
+                   'Саранск': 'https://rg.ru/i/gallery/98c3b2fa/1_506cea07.jpg',
+                   'Сочи': 'https://tropki.ru/sites/default/files/styles/article/public/previews/17127/stadion-fisht_0.jpg?itok=eKqyPXlR'
+           }
