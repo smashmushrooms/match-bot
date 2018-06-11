@@ -1,50 +1,92 @@
 import requests
+from used_dict import templates_names, country_flag
 
-TEMPLATE_VERSUS = 'VERSUS'
 URL = 'http://api-hack.photolab.me/template_process.php'
 
 
 def post2photlab_versus(photos, teams):
+    """
+        Generate versus photo
+        photos - list of url as type str
+        teams - list of url teams flags as type str
+
+        example:
+            url1 = 'http://www.wallpapersin4k.org/wp-content/uploads/2016/12/Man-Wallpapers-3.jpg'
+            url2 = 'http://games-of-thrones.ru/sites/default/files/pictures/all/Ben%20Affleck/28.jpg'
+            print(post2photlab_versus([url1, url2], ['Brazil', 'Germany']))
+    """
+    if not isinstance(photos, list):
+        print('photos must be list')
+        return ''
+
+    if not isinstance(teams, list):
+        print('teams must be list')
+        return ''
+
+    if len(photos) != 2:
+        print('len photos must be equal 2')
+        return ''
+
+    if len(teams) != 2:
+        print('len teams must be equal 2')
+        return ''
+
+    if not isinstance(photos[0], str) or not isinstance(photos[1], str):
+        print('each element of photos must be str')
+        return ''
+
+    if not isinstance(teams[0], str) or not isinstance(teams[1], str):
+        print('each element of teams must be str')
+        return ''
+
+    if teams[0] not in country_flag:
+        print('unknown country ' + teams[0])
+        return ''
+
+    if teams[1] not in country_flag:
+        print('unknown country ' + teams[1])
+        return ''
+
     url1 = photos[0]
     url2 = photos[1]
-    url3 = teams[0]
-    url4 = teams[1]
+    url3 = country_flag[teams[0]]
+    url4 = country_flag[teams[1]]
 
     files = {'image_url[1]': (None, url1),
              'image_url[2]': (None, url2),
              'image_url[3]': (None, url3),
              'image_url[4]': (None, url4),
-             'template_name': (None, TEMPLATE_VERSUS)}
+             'template_name': (None, templates_names['versus'])}
 
     response = requests.post(URL, files=files)
 
-    return response
+    return response.text
 
 
 def post2photlab(photo, template):
+    """
+        Generate photo by template
+        photos - url - str
+        template - name of template - str
+        example:
+            url = 'http://www.wallpapersin4k.org/wp-content/uploads/2016/12/Man-Wallpapers-3.jpg'
+            template_name = 'SOME_TEMPLATE
+            print(post2photlab(url, template_name))
+    """
+    if not isinstance(photo, str):
+        print('photos must be str')
+        return ''
+
+    if not isinstance(template, str):
+        print('teams must be str')
+        return ''
+
+    if template not in templates_names:
+        print('unknown name of template')
+
     files = {'image_url[1]': (None, photo),
-             'template_name': (None, template)}
+             'template_name': (None, templates_names['template'])}
 
     response = requests.post(URL, files=files)
 
-    return response
-
-
-def post2photlab_without(photos):
-    url1 = photos[0]
-    url2 = photos[1]
-
-    files = {'image_url[1]': (None, url1),
-             'image_url[2]': (None, url2),
-             'template_name': (None, 'CEAEF9D1-B95D-0804-9D87-5C5FAEF2F0E7')}
-
-    response = requests.post(URL, files=files)
-
-    return response
-
-
-if __name__ == "__main__":
-    print("Start")
-    url1 = 'https://static.life.ru/posts/2015/05/154452/gr/north/46a347254c68de2ae3badabcca0c6ae5__1200x630.jpg'
-    url2 = 'https://bzns.media/upload/resize_cache/iblock/646/932_932_1/646eac2be210ed63fcf645f32f3712e5.jpg'
-    print(post2photlab_without([url1, url2]).text)
+    return response.text
