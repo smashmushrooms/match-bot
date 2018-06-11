@@ -6,11 +6,11 @@ class Game:
 
     _score = [0, 0]
     _teams = []
-    _team1_fans = [User]
-    _team2_fans = [User]
+    _team1_fans = []
+    _team2_fans = []
     _time_of_game = None
     _score_matches = None
-    _state = ''
+    _state = 'idle'
 
     def __init__(self, teams, time, score):
         self._teams = teams
@@ -24,7 +24,13 @@ class Game:
             pass
         
         response = self._score_matches.get_score(self._teams)
-        # TODO Use match time
+        time = response['time']
+        if time == 'Завершен':
+            self._state = 'match_ended'
+
+        if response['time'] == '0':
+            self._state = 'match_started'
+
         score = [response['score_first'], response['score_second']]
         if score[0].isdigit() and score[1].isdigit():
             if score != self._score:
@@ -36,6 +42,7 @@ class Game:
                     user.score_changed(delta)
                 for user in self._team2_fans:
                     user.score_changed(delta)
+        self._time_to_game()
 
     def _update_fans_state(self, fans_state1, fans_state2):
         for user in self._team1_fans:
@@ -43,18 +50,21 @@ class Game:
         for user in self._team2_fans:
             user.change_state(fans_state2)
 
-    def _time_to_game(self, game_time):
+    def _time_to_game(self):
         now = datetime.now()
-        delta = now - self._time_of_game
-        print(delta)
-        if delta.hour == 0 and delta.minute == 3:
-            state = 'before_3_hours'
-        if delta.hour == 0 and delta.minute == 2:
-            state = 'before_1_5_hour'
-        if delta.hour == 0 and delta.minute == 1:
-            state = 'before_1_hour'
-
-        self._update_fans_state(state, state)
+        delta = self._time_of_game - now
+        hours = delta.seconds // 3600
+        minutes = (delta.seconds // 60) % 60
+        print(hours, minutes)
+        state = self._state
+        if hours == 0 and minutes == 3:
+            self._state = state = 'before_3_hours'
+        if hours == 0 and minutes == 2:
+            self._state = 'before_1_5_hour'
+        if hours == 0 and minutes == 1:
+            self._state = 'before_1_hour'
+        if state != self._state:
+            self._update_fans_state(self._state, self._state)
 
     def is_end(self):
         return self._state == 'ended'
@@ -64,3 +74,6 @@ class Game:
             self._team1_fans.append(user)
         else:
             self._team2_fans.append(user)
+
+    def get_teams(self):
+        return self._teams

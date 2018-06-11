@@ -8,7 +8,6 @@ class User():
     _current_lovely_team = ''
     _image_path = ''
     _state = ''
-    _game = None
     _scenario = {}
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
@@ -20,7 +19,6 @@ class User():
             if self._state == st:
                 if state == attr['prev_st']:
                     eval(attr['action'])()
-                    self._state = state
 
     def score_changed(self, delta):
         if delta:
@@ -33,7 +31,6 @@ class User():
             self._scenario = json.load(f)
         
     def set_lovely_team(self, team):
-        print (team)
         self._current_lovely_team = team
 
     def set_photo(self, image_path):

@@ -56,6 +56,7 @@ class Dialog:
 
     def start_scenario(self, text):
         self._user.set_lovely_team(text)
+        self._game_observer.add_fan(self._user)
         bot.send_text_message(self._user.get_id(), 'Thank you! Wait for updates')
 
     def get_id(self):
@@ -124,7 +125,6 @@ def _user_init(id):
     user = User(id)
     global dialogs
     dialogs[id] = Dialog(game_observer, user)
-    game_observer.add_user(user)
 
 def verify_fb_token(token_sent): 
     if token_sent == VERIFY_TOKEN:
