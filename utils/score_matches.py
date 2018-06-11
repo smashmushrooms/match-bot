@@ -2,55 +2,7 @@ import requests
 import bs4
 import numpy as np
 from datetime import datetime
-
-championats = {'Англия, Премьер лига': '12',
-               'Россия, Премьер лига': '13',
-               'Украина, Премьер лига': '14',
-               'Италия, Серия А': '15',
-               'Испания, Примера': '16',
-               'Германия, Бундеслига': '17',
-               'Франция, Лига 1': '18',
-               'Лига Чемпионов': '19',
-               'Лига Европы': '20',
-               'Чемпионат Европы': '24',
-               'Чемпионат Мира': '742'
-               }
-
-russian2english = {'Россия': 'Russia',
-                   'Саудовская Аравия': 'Saudi Arabia',
-                   'Португалия': 'Portugal',
-                   'Испания': 'Spain',
-                   'Марокко': 'Morocco',
-                   'Иран': 'IR Iran',
-                   'Египет': 'Egypt',
-                   'Уругвай': 'Uruguay',
-                   'Хорватия': 'Croatia',
-                   'Нигерия': 'Nigeria',
-                   'Перу': 'Peru',
-                   'Дания': 'Denmark',
-                   'Аргентина': 'Argentina',
-                   'Исландия': 'Iceland',
-                   'Франция': 'France',
-                   'Австралия': 'Australia',
-                   'Бразилия': 'Brazil',
-                   'Швейцария': 'Switzerland',
-                   'Германия': 'Germany',
-                   'Мексика': 'Mexico',
-                   'Коста-Рика': 'Costa Rica',
-                   'Сербия': 'Serbia',
-                   'Тунис': 'Tunisia',
-                   'Англия': 'England',
-                   'Бельгия': 'Belgium',
-                   'Панама': 'Panama',
-                   'Швеция': 'Sweden',
-                   'Южная Корея': 'Korea Republic',
-                   'Польша': 'Poland',
-                   'Сенегал': 'Senegal',
-                   'Колумбия': 'Colombia',
-                   'Япония': 'Japan'
-                   }
-
-english2russian = dict(zip(russian2english.values(), russian2english.keys()))
+from utils.used_dict import championats, russian2english, english2russian
 
 
 class Score_Matches:
