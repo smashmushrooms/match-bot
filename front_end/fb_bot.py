@@ -126,7 +126,6 @@ def receive_message():
         return verify_fb_token(token_sent)
     else:
         output = request.get_json()
-        print(output)
         for event in output['entry']:
             if 'messaging' in event:
                 messaging = event['messaging']

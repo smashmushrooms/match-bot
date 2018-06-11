@@ -48,6 +48,9 @@ class Game:
             user.change_state(fans_state2)
 
     def _time_to_game(self):
+        print(self)
+        print(self._team1_fans)
+        print(self._team2_fans)
         now = datetime.now()
         delta = self._time_of_game - now
         hours = delta.seconds // 3600
@@ -55,7 +58,7 @@ class Game:
         print(hours, minutes)
         state = self._state
         if hours == 0 and minutes == 3:
-            self._state = state = 'before_3_hours'
+            self._state = 'before_3_hours'
         if hours == 0 and minutes == 2:
             self._state = 'before_1_5_hour'
         if hours == 0 and minutes == 1:

@@ -42,9 +42,10 @@ def post2photlab_without(photos):
 
     return response
 
-
+'''
 if __name__ == "__main__":
     print("Start")
     url1 = 'https://static.life.ru/posts/2015/05/154452/gr/north/46a347254c68de2ae3badabcca0c6ae5__1200x630.jpg'
     url2 = 'https://bzns.media/upload/resize_cache/iblock/646/932_932_1/646eac2be210ed63fcf645f32f3712e5.jpg'
     print(post2photlab_without([url1, url2]).text)
+'''
