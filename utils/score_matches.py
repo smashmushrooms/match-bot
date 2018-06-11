@@ -2,7 +2,7 @@ import requests
 import bs4
 import numpy as np
 from datetime import datetime
-from utils.used_dict import championats, russian2english, english2russian
+from used_dict import championats, russian2english, english2russian
 
 
 class Score_Matches:
@@ -10,10 +10,10 @@ class Score_Matches:
         example:
             score = Score_Matches('Чемпионат Мира' , '2018-6-19')
             score.get_matches_names()
-            >>>[['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Japan']]
+                [['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Japan']]
 
             score.get_score(['Poland', 'Senegal'])
-            >>>{'score_first': '-',
+                {'score_first': '-',
                 'score_second': '-',
                 'time': 18:00}
         time - str

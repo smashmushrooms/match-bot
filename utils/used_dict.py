@@ -1,5 +1,8 @@
+URL = 'http://api-hack.photolab.me/template_process.php'
+
 templates_names = {
-    'versus': '10B527DA-8896-8304-018D-2C24F5492476'
+    'versus': '10B527DA-8896-8304-018D-2C24F5492476',
+    'soccer_man': '4283E3C4-BE89-42A4-D9B5-B775A66F146F'
 }
 
 championats = {'Англия, Премьер лига': '12',

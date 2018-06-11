@@ -1,7 +1,6 @@
 import requests
-from used_dict import templates_names, country_flag
-
-URL = 'http://api-hack.photolab.me/template_process.php'
+import bs4
+from used_dict import templates_names, country_flag, URL
 
 
 def post2photlab_versus(photos, teams):
@@ -85,8 +84,31 @@ def post2photlab(photo, template):
         print('unknown name of template')
 
     files = {'image_url[1]': (None, photo),
-             'template_name': (None, templates_names['template'])}
+             'template_name': (None, templates_names[template])}
 
     response = requests.post(URL, files=files)
 
     return response.text
+
+
+def generate_ten_city_photo(city):
+    """
+        Returns 10 photo of city from yandex.
+        city - str
+    """
+    city = 'красивые места ' + city
+    search_city = "https://yandex.ru/images/search?text=" + city
+
+    s = requests.get(search_city)
+    b = bs4.BeautifulSoup(s.text, "html.parser")
+    count = 0
+    good_url = []
+    for match in b.select('.serp-item__link'):
+        url = match.get('href').split('=')[2]
+        url = url.replace('%3A', ':').replace('%2F', '/').split('&')[0]
+        if url[-4:] == '.jpg':
+            count += 1
+            good_url.append(url)
+        if count == 10:
+            break
+    return good_url
