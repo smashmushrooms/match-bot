@@ -1,5 +1,5 @@
 import requests
-from used_dict import templates_names, country_flag
+from utils.used_dict import templates_names, country_flag
 
 URL = 'http://api-hack.photolab.me/template_process.php'
 

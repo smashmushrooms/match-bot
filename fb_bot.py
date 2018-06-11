@@ -1,112 +1,21 @@
-# Python libraries that we need to import for our bot
 import random
 import shutil
-from flask import Flask, request
-from pymessenger.bot import Bot
-from pymessenger import Element, Button
 import requests
-from game_observer import GameObserver
-from objects import User
-from time import sleep
+
 from threading import Thread
+from time import sleep
+from flask import Flask, request
 from numpy import random
-#from game_observer import GameObserver
-    
-class Dialog:
-    actions = {
-        'nil': 'self.nil',
-        'greetings': 'self.greetings',
-        'choose_match': 'self.choose_match',
-        'choose_side': 'self.choose_side',
-        'start_scenario': 'self.start_scenario'
-    }
+from pymessenger import Button
+from pymessenger.bot import Bot
 
-
-    def get_random_message(self, messages):
-        return random.choice(messages, 1)[0]
-
-    def __init__(self, game_observer, user):
-        self._state = 'nil'
-        self._game_observer = game_observer
-        self._user = user
-
-    def dialog_update(self, text):
-        eval(self.actions[self._state])(text)
-
-    def nil(self, text):
-        self._state = 'greetings'
-
-    def greetings(self, text):
-        greetings = [
-            'Hi',
-            'Hello',
-            'Hi there'
-        ]
-        self_intros = [
-            'my name is MatchBot',
-            'I am MatchBot'
-        ]
-        photo_requests = [
-            'I need your photo, take a selfie, please',
-            'I need your selfie, send it to me, please',
-            'Please, send your selfie'
-        ]
-
-        message_parts = [self.get_random_message(part_variations)
-                         for part_variations in
-                         [greetings, self_intros, photo_requests]]
-
-        message = '{}, {}!\n{}'.format(
-            *message_parts
-        )
-
-        bot.send_text_message(self._user.get_id(), message)
-        self._state = 'choose_match'
-
-    def choose_match(self, text):
-        bot.send_text_message(self._user.get_id(), text)
-        teams = self._game_observer.get_teams()
-        buttons = []
-        print(teams)
-        for team in teams:
-            buttons.append([team[0] + ' - ' + team[1], 'postback'])
-
-        choose_match_requests = [
-            'Choose your favorite match today',
-            'What is the match you wanna observe?',
-            'What is the match you wanna track?',
-            'What match do you prefer today?'
-        ]
-
-        send_buttons(self._user.get_id(), buttons, self.get_random_message(choose_match_requests))
-        self._state = "choose_side"
-
-    def choose_side(self, text):
-        teams = text.split(' - ')
-        side_requests = [
-            'Choose your side',
-            'Who do you support?',
-            'Who would win?'
-        ]
-        quick_reply_send(self._user.get_id(),
-                         [[teams[0], teams[0], ''], [teams[1], teams[1], '']],
-                         self.get_random_message(side_requests))
-        self._state = 'start_scenario'
-
-    def start_scenario(self, text):
-        self._user.set_lovely_team(text)
-        self._game_observer.add_fan(self._user)
-        bot.send_text_message(self._user.get_id(), 'Thank you! Wait for updates')
-
-    def get_id(self):
-        return self._user.get_id()
-
-    def get_state(self):
-        return self._state
-
+from objects import Dialog
+from objects import GameObserver
+from objects import User
 
 app = Flask(__name__)
-ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
+ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHl' \
+               'X7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
 bot = Bot(ACCESS_TOKEN)
 game_observer = GameObserver()
@@ -144,7 +53,8 @@ def receive_message():
                                 dialogs[recipient_id].dialog_update(message)
                             if x['message'].get('attachments'):
                                 if x['message']['attachments'][0]['type'] == 'image':
-                                    response = requests.get(x['message']['attachments'][0]['payload']['url'], stream=True)
+                                    response = requests.get(x['message']['attachments'][0]['payload']['url'],
+                                                            stream=True)
                                     if dialogs[recipient_id].get_state() == 'choose_match':
                                         with open(recipient_id + '.png', 'wb') as out_file:
                                             shutil.copyfileobj(response.raw, out_file)
@@ -244,12 +154,13 @@ def observer_thread():
 class ObsereverThread(Thread):
     def __init__(self):
         Thread.__init__(self)
-        
+
     def run(self):
         while True:
             sleep(5)
             print('upd')
             game_observer.update_state()
+
 
 if __name__ == "__main__":
     configure_bot()

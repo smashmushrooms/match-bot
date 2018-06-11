@@ -1,3 +1,4 @@
-from game import *
-from user import *
-from dialog import *
+from objects.game import *
+from objects.user import *
+from objects.dialog import *
+from objects.game_observer import *
