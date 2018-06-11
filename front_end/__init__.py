@@ -1,1 +1,1 @@
-from fb_bot import *
+#from fb_bot import *

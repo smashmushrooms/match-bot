@@ -1,6 +1,6 @@
 from user import User
 from datetime import datetime, date, time
-from score_matches import ScoreMatches
+from score_matches import Score_Matches
 
 class Game:
 
@@ -11,10 +11,10 @@ class Game:
     _time_of_game = None
     _score_matches = None
 
-    def __init__(self, teams, time):
+    def __init__(self, teams, time, score):
         self._teams = teams
         self._time_of_game = time
-        self._score_matches = ScoreMatches()
+        self._score_matches = score
 
     def update(self):
         now = datetime.datetime.now()

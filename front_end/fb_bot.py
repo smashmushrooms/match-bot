@@ -6,14 +6,65 @@ from pymessenger import Element, Button
 import requests
 from game_observer import GameObserver
 from objects.user import User
+#from dialog_flow.dialog_tree import Dialog
 from time import sleep
 #from game_observer import GameObserver
+    
+class Dialog:
+
+    actions = {
+    "nil": 'self.nil',
+    "greetings": 'self.greetings',
+    "choose_match": 'self.choose_match',
+    "choose_side": 'self.choose_side',
+    "scenario": 'self.start_scenario'
+    }
+
+    _state = ''
+    _game_observer = None
+    _user = None
+
+    def __init__(self, game_observer, user):
+        self._state = 'nil'
+        self._game_observer = game_observer
+        self._user = user
+
+    def dialog_update(self, text):
+        eval(self.actions[self._state])(text)
+
+    def greetings(self, text):
+        bot.send_text_message(self._user.get_id(), "Hi, we are photolabbot, we need your photo, take selfi please")
+        self._state = "choose_match"
+
+    def choose_match(self, text):
+        teams = self._game_observer.get_teams()
+        buttons = []
+        print(teams)
+        for team in teams:
+            buttons.append([team[0] + ' - ' + team[1], 'postback'])
+        send_buttons(self._user.get_id(), buttons, "Choose your favorite match today")
+        self._state = "choose_side"
+
+    def choose_side(self, text):
+        teams = text.split(' - ')
+        quick_reply_send(self._user.get_id(), [[teams[0], teams[0], ''], [teams[1], teams[1], '']], 'Choose your side')
+        self._state = 'start_scenario'
+
+    def get_id(self):
+        return self._user.get_id()
+    
+    def nil(self, text):
+        self._state = 'greetings'
+
+    def start_scenario(self, text):
+        self._user.set_lovely_team(text)
 
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
 bot = Bot(ACCESS_TOKEN)
 game_observer = GameObserver()
+dialogs = {}
 
 #We will receive messages that Facebook sends our bot at this endpoint 
 @app.route("/", methods=['GET', 'POST'])
@@ -23,35 +74,45 @@ def receive_message():
         that confirms all requests that your bot receives came from Facebook.""" 
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
-    #if the request was not get, it must be POST and we can just proceed with sending a message back to user
     else:
-        # get whatever message a user sent the bot
         output = request.get_json()
         print(output)
         for event in output['entry']:
-            messaging = event['messaging']
-            for x in messaging:
-                if 'message' in x:
-                    if x.get('message'):
-                        recipient_id = x['sender']['id']
-                        user = game_observer.find_user(recipient_id)
-                        if x['message'].get('text'):
-                            message = x['message']['text']
-                            send_message(recipient_id, message)
-                            user.get_dialog().dialog(message)
-                        if x['message'].get('attachments'):
-                            for att in x['message'].get('attachments'):
-                                pass#bot.send_attachment_url(recipient_id, att['type'], att['payload']['url'])
-                else:
-                    if 'postback' in x and 'payload' in x['postback']:
-                        if x['postback']['payload'] == 'Begin':
+            if 'messaging' in event:
+                messaging = event['messaging']
+                for x in messaging:
+                    if 'message' not in x:
+                        if 'postback' in x and 'payload' in x['postback']:
+                            if x['postback']['payload'] == 'Begin':
+                                recipient_id = x['sender']['id']
+                                print(x['sender']['id'])
+                                print(x['recipient']['id'])
+                                if recipient_id not in dialogs:
+                                    _user_init(recipient_id)
+                                dialogs[recipient_id].dialog_update('')
+                    else:
+                        if x.get('message'):
                             recipient_id = x['sender']['id']
-                            user = User(recipient_id, game_observer)
-                            game_observer.add_user(user)
-                            user.get_dialog().start_dialog()
-                            dialog.start_dialog()
-                            pass
+                            if recipient_id not in dialogs:
+                                return "Message Processed"
+                            if x['message'].get('text'):
+                                message = x['message']['text']
+                                dialogs[recipient_id].dialog_update(message)
+                            if x['message'].get('attachments'):
+                                pass
+            if 'standby' in event:
+                for standby in event['standby']:
+                    recipient_id = standby['sender']['id']
+                    if 'postback' in standby and 'title' in standby['postback']:
+                        dialogs[recipient_id].dialog_update(standby['postback']['title'])
+
     return "Message Processed"
+
+def _user_init(id):
+    user = User(id)
+    global dialogs
+    dialogs[id] = Dialog(game_observer, user)
+    game_observer.add_user(user)
 
 def verify_fb_token(token_sent): 
     if token_sent == VERIFY_TOKEN:
@@ -64,7 +125,7 @@ def get_message():
 
 def send_message(recipient_id, response):
     bot.send_text_message(recipient_id, response)
-    quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
+    #quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
     return "success"
 
 def configure_bot():
@@ -77,7 +138,6 @@ def configure_bot():
         }]  
     }
     resp = requests.post(addr, json = response)
-    print (resp)
 
 
 def send_buttons(recipient_id, inbuttons, action_description):
@@ -114,10 +174,21 @@ def create_quick_reply(buttons):
         quick_replies.append(quick_reply)
     return quick_replies
 
+import threading
+
 if __name__ == "__main__":
     configure_bot()
-    app.run()
+    app.run(threaded=True)
 
-    while (True):
-        sleep(30)
+    t1 = threading.Thread(target=observer_thread)
+    t1.start()
+    t1.join()
+
+
+def observer_thread():
+    while (True):   
+        sleep(1)
         game_observer.update()
+
+
+
