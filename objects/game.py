@@ -45,11 +45,12 @@ class Game:
     def _time_to_game(self, game_time):
         now = datetime.datetime.now()
         delta = now - self._time_of_game
-        if delta.hours == 3 and delta.minutes == 0:
+        print(delta)
+        if delta.hour == 0 and delta.minute == 3:
             state = 'before_3_hours'
-        if delta.hours == 1 and delta.minutes == 30:
+        if delta.hour == 0 and delta.minute == 2:
             state = 'before_1_5_hour'
-        if delta.hours == 1 and delta.minutes == 0:
+        if delta.hour == 0 and delta.minute == 1:
             state = 'before_1_hour'
 
         self._update_fans_state(state, state)

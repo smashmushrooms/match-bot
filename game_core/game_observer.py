@@ -1,7 +1,7 @@
 from objects.game import Game
 from objects.user import User
 from utils.score_matches import Score_Matches
-import datetime
+import datetime 
 
 class GameObserver:
     
@@ -17,13 +17,13 @@ class GameObserver:
         self._teams = self._score.get_matches_names()
         for team in self._teams:
             match_time = self._score.get_score(team)['time'].split('-')
-            self._games.append(Game(team, datetime.time(19, 0), self._score))
+            self._games.append(Game(team, datetime.time(15, 1), self._score))
 
     def update_state(self):
         now = datetime.datetime.now()
-        if (now.hours == 0 and now.minutes == 0) or not len(self._games):
+        if (now.hour == 0 and now.minute == 0) or not len(self._games):
             self._update_daily_games()
-
+        print (self._games)
         for game in self._games:
             game.update()
         self._games = list(filter(lambda game: not game.is_end(), self._games))

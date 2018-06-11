@@ -1,5 +1,6 @@
 #Python libraries that we need to import for our bot
 import random
+import shutil
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pymessenger import Element, Button
@@ -13,11 +14,11 @@ from time import sleep
 class Dialog:
 
     actions = {
-    "nil": 'self.nil',
-    "greetings": 'self.greetings',
-    "choose_match": 'self.choose_match',
-    "choose_side": 'self.choose_side',
-    "scenario": 'self.start_scenario'
+        'nil': 'self.nil',
+        'greetings': 'self.greetings',
+        'choose_match': 'self.choose_match',
+        'choose_side': 'self.choose_side',
+        'start_scenario': 'self.start_scenario'
     }
 
     _state = ''
@@ -32,11 +33,15 @@ class Dialog:
     def dialog_update(self, text):
         eval(self.actions[self._state])(text)
 
+    def nil(self, text):
+        self._state = 'greetings'
+
     def greetings(self, text):
-        bot.send_text_message(self._user.get_id(), "Hi, we are photolabbot, we need your photo, take selfi please")
-        self._state = "choose_match"
+        bot.send_text_message(self._user.get_id(), 'Hi, we are photolabbot, we need your photo, take selfi please')
+        self._state = 'choose_match'
 
     def choose_match(self, text):
+        bot.send_text_message(self._user.get_id(), text)
         teams = self._game_observer.get_teams()
         buttons = []
         print(teams)
@@ -50,15 +55,16 @@ class Dialog:
         quick_reply_send(self._user.get_id(), [[teams[0], teams[0], ''], [teams[1], teams[1], '']], 'Choose your side')
         self._state = 'start_scenario'
 
+    def start_scenario(self, text):
+        self._user.set_lovely_team(text)
+        bot.send_text_message(self._user.get_id(), 'Thank you! Wait for updates')
+
     def get_id(self):
         return self._user.get_id()
     
-    def nil(self, text):
-        self._state = 'greetings'
-
-    def start_scenario(self, text):
-        self._user.set_lovely_team(text)
-
+    def get_state(self):
+        return self._state
+    
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
@@ -85,8 +91,6 @@ def receive_message():
                         if 'postback' in x and 'payload' in x['postback']:
                             if x['postback']['payload'] == 'Begin':
                                 recipient_id = x['sender']['id']
-                                print(x['sender']['id'])
-                                print(x['recipient']['id'])
                                 if recipient_id not in dialogs:
                                     _user_init(recipient_id)
                                 dialogs[recipient_id].dialog_update('')
@@ -99,8 +103,17 @@ def receive_message():
                                 message = x['message']['text']
                                 dialogs[recipient_id].dialog_update(message)
                             if x['message'].get('attachments'):
-                                pass
-            if 'standby' in event:
+                                if x['message']['attachments'][0]['type'] == 'image':
+                                    response = requests.get(x['message']['attachments'][0]['payload']['url'], stream=True)
+                                    if dialogs[recipient_id].get_state() == 'choose_match':
+                                        with open(recipient_id + '.png', 'wb') as out_file:
+                                            shutil.copyfileobj(response.raw, out_file)
+                                        dialogs[recipient_id].dialog_update('Thanks! You\'re nice')
+                                        return "Message Processed"
+                                else:
+                                    bot.send_text_message(recipient_id, 'Send your photo please')
+
+            elif 'standby' in event:
                 for standby in event['standby']:
                     recipient_id = standby['sender']['id']
                     if 'postback' in standby and 'title' in standby['postback']:
@@ -125,7 +138,6 @@ def get_message():
 
 def send_message(recipient_id, response):
     bot.send_text_message(recipient_id, response)
-    #quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
     return "success"
 
 def configure_bot():
@@ -176,19 +188,18 @@ def create_quick_reply(buttons):
 
 import threading
 
+def observer_thread():
+    while True:
+        sleep(30)
+        print('upd')
+        game_observer.update_state()
+
 if __name__ == "__main__":
     configure_bot()
-    app.run(threaded=True)
 
     t1 = threading.Thread(target=observer_thread)
     t1.start()
+
+    app.run(threaded=True)
+
     t1.join()
-
-
-def observer_thread():
-    while (True):   
-        sleep(1)
-        game_observer.update()
-
-
-

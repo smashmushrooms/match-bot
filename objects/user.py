@@ -20,6 +20,7 @@ class User():
             if self._state == st:
                 if state == attr['prev_st']:
                     eval(attr['action'])()
+                    self._state = state
 
     def score_changed(self, delta):
         if delta:

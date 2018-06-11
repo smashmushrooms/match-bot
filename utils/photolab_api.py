@@ -1,15 +1,15 @@
 def goal_cb():
-    pass
+    print("oh yeah")
 
 def miss_cb():
-    pass
+    print("oh no")
 
 def face_flag():
-    pass
+    print("face_flag")
 
 def changing_room():
-    pass
+    print("changing room")
 
 def warm_up():
-    pass
+        print("warm_up")
 
