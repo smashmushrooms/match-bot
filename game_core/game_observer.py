@@ -1,13 +1,13 @@
 from objects.game import Game
 from objects.user import User
 from utils.score_matches import Score_Matches
-import datetime 
+from datetime import datetime, time
 
 class GameObserver:
     
-    _games = [Game]
+    _games = []
     _teams = [[]]
-    _users = [User]
+    _users = []
 
     def __init__(self):
         self._score = Score_Matches(date='2018-06-18')
@@ -17,14 +17,16 @@ class GameObserver:
         self._teams = self._score.get_matches_names()
         for team in self._teams:
             match_time = self._score.get_score(team)['time'].split('-')
-            self._games.append(Game(team, datetime.time(15, 1), self._score))
+            game = Game(team, time(15, 37), self._score)
+            self._games.append(game)
 
     def update_state(self):
-        now = datetime.datetime.now()
+        now = datetime.now()
         if (now.hour == 0 and now.minute == 0) or not len(self._games):
             self._update_daily_games()
         print (self._games)
         for game in self._games:
+            print(game)
             game.update()
         self._games = list(filter(lambda game: not game.is_end(), self._games))
 

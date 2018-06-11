@@ -10,6 +10,7 @@ class Game:
     _team2_fans = [User]
     _time_of_game = None
     _score_matches = None
+    _state = ''
 
     def __init__(self, teams, time, score):
         self._teams = teams
@@ -17,14 +18,14 @@ class Game:
         self._score_matches = score
 
     def update(self):
-        now = datetime.datetime.now()
-        if now.hours == 0 and now.minutes == 0:
+        now = datetime.now()
+        if now.hour == 0 and now.minute == 0:
             # TODO Restart dialog system
             pass
         
         response = self._score_matches.get_score(self._teams)
         # TODO Use match time
-        score = [response['score_firts'], response['score_second']]
+        score = [response['score_first'], response['score_second']]
         if score[0].isdigit() and score[1].isdigit():
             if score != self._score:
                 if score[0] > self._score[0]:
@@ -43,7 +44,7 @@ class Game:
             user.change_state(fans_state2)
 
     def _time_to_game(self, game_time):
-        now = datetime.datetime.now()
+        now = datetime.now()
         delta = now - self._time_of_game
         print(delta)
         if delta.hour == 0 and delta.minute == 3:
