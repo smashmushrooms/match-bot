@@ -1,4 +1,5 @@
-import requests, bs4
+import requests
+import bs4
 import numpy as np
 from datetime import datetime
 
@@ -15,86 +16,56 @@ championats = {'Англия, Премьер лига': '12',
                'Чемпионат Мира': '742'
                }
 
+russian2english = {'Россия': 'Russia',
+                   'Саудовская Аравия': 'Saudi Arabia',
+                   'Португалия': 'Portugal',
+                   'Испания': 'Spain',
+                   'Марокко': 'Morocco',
+                   'Иран': 'IR Iran',
+                   'Египет': 'Egypt',
+                   'Уругвай': 'Uruguay',
+                   'Хорватия': 'Croatia',
+                   'Нигерия': 'Nigeria',
+                   'Перу': 'Peru',
+                   'Дания': 'Denmark',
+                   'Аргентина': 'Argentina',
+                   'Исландия': 'Iceland',
+                   'Франция': 'France',
+                   'Австралия': 'Australia',
+                   'Бразилия': 'Brazil',
+                   'Швейцария': 'Switzerland',
+                   'Германия': 'Germany',
+                   'Мексика': 'Mexico',
+                   'Коста-Рика': 'Costa Rica',
+                   'Сербия': 'Serbia',
+                   'Тунис': 'Tunisia',
+                   'Англия': 'England',
+                   'Бельгия': 'Belgium',
+                   'Панама': 'Panama',
+                   'Швеция': 'Sweden',
+                   'Южная Корея': 'Korea Republic',
+                   'Польша': 'Poland',
+                   'Сенегал': 'Senegal',
+                   'Колумбия': 'Colombia',
+                   'Япония': 'Japan'
+                   }
+
 
 class ScoreMatches:
     '''
         example:
-            score = ScoreMatches()
-            score.get_matches('Чемпионат Мира' , '2018-6-14')
-            
+            score = ScoreMatches('Чемпионат Мира' , '2018-6-19')
+            score.get_matches_names()
+            >>>[['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Japan']]
+
+            score.get_score(['Poland', 'Senegal'])
+            >>>{'score_first': '-',
+                'score_second': '-',
+                'time': datetime.datetime(2018, 6, 19, 18, 0)}
+
     '''
-    def __init__(self):
-        pass
 
-    def _check_date(self):
-        if not isinstance(self._date, str):
-            print('Date must be str')
-            self._date = False
-            return
-
-        if len(self._date.split('-')) != 3:
-            print('Incorrect date')
-            self._date = False
-            return
-
-        year, month, day = np.array(self._date.split('-'), dtype=int)
-        if year not in range(2018, 3000):
-            print('Year in date must be from range(2018 , 3000)')
-            self._date = False
-            return
-
-        if month not in range(1, 13):
-            print('Month in date must be from range(1 , 13)')
-            self._date = False
-            return
-
-        if day not in range(1, 31):
-            print('Day in date must be from range(1 , 31)')
-            self._date = False
-            return
-
-        self._date = str(year) + '-' + str(month) + '-' + str(day)
-
-    def _get_url(self):
-
-        if self._name_of_champ not in championats:
-            print('Incorrect name of championat')
-            self._url = False
-            return
-
-        _id = championats[self._name_of_champ]
-
-        if not self._date:
-            time = datetime.now()
-            self._date = str(time.year) + '-' + \
-                str(time.month) + '-' + str(time.day)
-        else:
-            self._check_date()
-            if self._date == False:
-                self._url = False
-                return
-
-        self._url = 'http://soccer365.ru/online/&competition_id=' + _id + '&date=' + self._date
-
-    def _get_match_score(self):
-        
-        if not self._url:
-            return
-
-        s = requests.get(self._url)
-        b = bs4.BeautifulSoup(s.text, "html.parser")
-
-        for i, match in enumerate(b.select('.game_block')):
-            match = match.getText().replace('\t', '').replace('\xa0', '').split('\n')
-            match = list(filter(lambda x: x != '', match))
-            time = match[0]
-            first_team = match[1][:-1]
-            second_team = match[4]
-            self._dict_match[i] = {'name_of_first': first_team, 'name_of_second': second_team,
-                             'match': first_team + '-' + second_team,
-                             'time': time, 'score_first': match[2], 'score_second': match[3]}
-
-    def get_matches(self, name_of_champ, date=None):
+    def __init__(self, name_of_champ='Чемпионат Мира', date=None):
         '''
             name_of_champ - str:
                 Supported Championships:
@@ -115,9 +86,116 @@ class ScoreMatches:
         '''
         self._name_of_champ = name_of_champ
         self._date = date
+
         self._dict_match = {}
-        
+        self._url = False
+        self._datetime = False
+
+        self._get_matches()
+
+    def _check_date(self):
+        '''
+            Date check.
+        '''
+        if not isinstance(self._date, str):
+            print('Date must be str')
+            return
+
+        if len(self._date.split('-')) != 3:
+            print('Incorrect date format')
+            return
+
+        year, month, day = np.array(self._date.split('-'), dtype=int)
+
+        try:
+            self._datetime = datetime(year, month, day)
+        except Exception as error:
+            print(error)
+            return
+
+        self._date = str(year) + '-' + str(month) + '-' + str(day)
+
+    def _get_url(self):
+        '''
+            Generation of the request url.
+        '''
+
+        if self._name_of_champ not in championats:
+            print('Incorrect name of championat')
+            return
+
+        _id = championats[self._name_of_champ]
+
+        if not self._date:
+            time = datetime.now()
+            self._date = str(time.year) + '-' + \
+                str(time.month) + '-' + str(time.day)
+        else:
+            self._check_date()
+            if self._datetime == False:
+                return
+
+        self._url = 'http://soccer365.ru/online/&competition_id=' + \
+            _id + '&date=' + self._date
+
+    def _get_match_score(self):
+        '''
+            Getting information about matches by url.
+        '''
+        if not self._url:
+            return
+
+        s = requests.get(self._url)
+        b = bs4.BeautifulSoup(s.text, "html.parser")
+
+        for match in b.select('.game_block'):
+            match = match.getText().replace('\t', '').replace('\xa0', '').split('\n')
+            match = list(filter(lambda x: x != '', match))
+            time = match[0].replace(' ', '').split(',')[1].split(':')
+            self._datetime = self._datetime.replace(
+                hour=int(time[0]), minute=int(time[1]))
+            try:
+                first_team = russian2english[match[1][:-1]]
+                second_team = russian2english[match[4]]
+            except:
+                print('Team has not yet been determined')
+                return
+            score_first = match[2]
+            score_second = match[3]
+            match_name = first_team + '-' + second_team
+
+            self._dict_match[match_name] = {'first_team': first_team,
+                                            'second_team': second_team,
+                                            'time': self._datetime,
+                                            'score_first': score_first,
+                                            'score_second': score_second}
+
+    def _get_matches(self):
+        '''
+            Processing of all necessary functions.
+        '''
         self._get_url()
         if self._url:
             self._get_match_score()
         return self._dict_match
+
+    def get_matches_names(self):
+        '''
+            Getting a list of all matches on the date.
+        '''
+        self._names = list(self._dict_match.keys())
+        return [i.split('-') for i in self._names]
+
+    def get_score(self, teams):
+        '''
+            teams - list:
+                format - [first_team , second_team]
+                first_team - str
+                second_team - str
+        '''
+        match_name = '-'.join(teams)
+        if match_name not in self._names:
+            print('This match is not today')
+            return {}
+        match = self._dict_match[match_name]
+        return {'time': match['time'], 'score_first': match['score_first'], 'score_second': match['score_second']}
