@@ -2,26 +2,44 @@ import json
 import os
 import utils.photolab_api as pl
 
+def idle():
+    print("idle")
+
+def face_flag():
+    print("face_flag")
+
+def changing_room():
+    print("changing_room")
+
+def warm_up():
+    print("warm_up")
+
+def match_started():
+    print("match_started")
+
+def match_ended():
+    print("match_ended")
+
+def ended():
+    print("ended")
 
 class User:
-    _name = ''
     _id = ''
     _user_directory = ''
     _current_lovely_team = ''
     _image_path = ''
-    _state = ''
+    _state = 'idle'
     _scenario = {}
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
         self._id = id
         self.set_scenario(scenario_path)
 
-
     def change_state(self, state):
         for st, attr in self._scenario.items():
-            if self._state == st:
-                if state == attr['prev_st']:
-                    eval(attr['action'])()
+            if self._state == attr['prev_st']:
+                eval(attr['action'])()
+                self._state = state
 
     def score_changed(self, delta):
         if delta:
