@@ -45,6 +45,9 @@ class Game:
             user.change_state(fans_state2)
 
     def _time_to_game(self):
+
+        return
+
         now = datetime.now()
         delta = self._time_of_game - now
         hours = delta.seconds // 3600

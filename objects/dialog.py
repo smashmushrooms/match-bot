@@ -16,7 +16,8 @@ class Dialog(object):
         'greetings': 'self.greetings',
         'choose_match': 'self.choose_match',
         'choose_side': 'self.choose_side',
-        'start_scenario': 'self.start_scenario'
+        'start_scenario': 'self.start_scenario',
+        'scenario': 'self.scenario'
     }
 
     def get_random_message(self, messages):
@@ -73,7 +74,7 @@ class Dialog(object):
             'What match do you prefer today?'
         ]
 
-        send_buttons(self._id, buttons, self.get_random_message(choose_match_requests))
+        self.send_buttons(buttons, self.get_random_message(choose_match_requests))
         self._state = "choose_side"
 
     def choose_side(self, text):
@@ -83,13 +84,16 @@ class Dialog(object):
             'Who do you support?',
             'Who would win?'
         ]
-        quick_reply_send(self._id,
-                         [[teams[0], teams[0], ''], [teams[1], teams[1], '']],
-                         self.get_random_message(side_requests))
+        self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
+                              self.get_random_message(side_requests))
         self._state = 'start_scenario'
 
     def start_scenario(self, text):
         bot.send_text_message(self._id, 'Thank you! Wait for updates')
+        self._state = 'scenario'
+
+    def scenario(self, text):
+        pass
 
     def get_state(self):
         return self._state
@@ -111,7 +115,7 @@ class Dialog(object):
         return result
 
     def quick_reply_send(self, buttons, text):
-        quick_replies = create_quick_reply(buttons)
+        quick_replies = self.create_quick_reply(buttons)
         message = {
             "text": text,
             "quick_replies": quick_replies
@@ -134,4 +138,7 @@ class Dialog(object):
 
     def set_game_observer(self, observer):
         self._game_observer = observer
+
+    def send_image_url(self, url):
+        bot.send_image_url(self._id, url)
 

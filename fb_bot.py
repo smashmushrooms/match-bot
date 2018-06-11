@@ -51,7 +51,7 @@ def receive_message():
                                 if x['message']['attachments'][0]['type'] == 'image':
                                     url = x['message']['attachments'][0]['payload']['url']
                                     print("out")
-                                    if users[recipient_id].get_state() == 'choose_match':
+                                    if users[recipient_id].get_dialog().get_state() == 'choose_match':
                                         users[recipient_id].set_image_url(url)
                                         users[recipient_id].dialog_update()
                                         print("in")
@@ -101,6 +101,6 @@ if __name__ == "__main__":
     observer_thread = ObsereverThread()
     observer_thread.start()
 
-    app.run(threaded=True)
+    app.run(threaded=False)
 
     observer_thread.join()

@@ -21,10 +21,14 @@ class User:
     def change_state(self, state):
         for st, attr in self._scenario.items():
             if self._state == attr['prev_st']:
-                url = eval(attr['action'])(flags = [self._image_url, self._image_url],
-                                           teams = self._game.get_teams())
-                self._dialog.set_image_url(url)
+                print('Previous state:', self._state)
+                print('New state:', state)
+                if self._state == state:
+                    return
+                url = eval(attr['action'])(photos=[self._image_url, self._image_url],
+                                           teams=self._game.get_teams())
                 self._state = state
+                self._dialog.send_image_url(url)
 
     def score_changed(self, delta):
         if delta:
@@ -65,11 +69,13 @@ class User:
 
     def dialog_update(self, message=''):
         if self._dialog.get_state() == 'start_scenario':
-            self.set_lovely_team(message)
-            self._state = 'idle'
             self._game_observer.add_fan(self)
-
+            self.set_lovely_team(message)
+            self.change_state('idle')
         self._dialog.dialog_update(message)
 
     def send_message(self, message):
         self._dialog.send_message(message)
+
+    def get_dialog(self):
+        return self._dialog
