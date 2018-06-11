@@ -3,12 +3,17 @@ import random
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pymessenger import Element, Button
+import requests
+from game_observer import GameObserver
+from objects.user import User
+from time import sleep
 #from game_observer import GameObserver
 
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
 bot = Bot(ACCESS_TOKEN)
+game_observer = GameObserver()
 
 #We will receive messages that Facebook sends our bot at this endpoint 
 @app.route("/", methods=['GET', 'POST'])
@@ -21,20 +26,31 @@ def receive_message():
     #if the request was not get, it must be POST and we can just proceed with sending a message back to user
     else:
         # get whatever message a user sent the bot
-       output = request.get_json()
-       for event in output['entry']:
-          messaging = event['messaging']
-          for message in messaging:
-            if message.get('message'):
-                #Facebook Messenger ID for user so we know where to send response back to
-                recipient_id = message['sender']['id']
-                if message['message'].get('text'):
-                    response_sent_text = get_message()
-                    send_message(recipient_id, response_sent_text)
-                #if user sends us a GIF, photo,video, or any other non-text item
-                if message['message'].get('attachments'):
-                    response_sent_nontext = get_message()
-                    send_message(recipient_id, response_sent_nontext)
+        output = request.get_json()
+        print(output)
+        for event in output['entry']:
+            messaging = event['messaging']
+            for x in messaging:
+                if 'message' in x:
+                    if x.get('message'):
+                        recipient_id = x['sender']['id']
+                        user = game_observer.find_user(recipient_id)
+                        if x['message'].get('text'):
+                            message = x['message']['text']
+                            send_message(recipient_id, message)
+                            user.get_dialog().dialog(message)
+                        if x['message'].get('attachments'):
+                            for att in x['message'].get('attachments'):
+                                pass#bot.send_attachment_url(recipient_id, att['type'], att['payload']['url'])
+                else:
+                    if 'postback' in x and 'payload' in x['postback']:
+                        if x['postback']['payload'] == 'Begin':
+                            recipient_id = x['sender']['id']
+                            user = User(recipient_id, game_observer)
+                            game_observer.add_user(user)
+                            user.get_dialog().start_dialog()
+                            dialog.start_dialog()
+                            pass
     return "Message Processed"
 
 def verify_fb_token(token_sent): 
@@ -48,8 +64,21 @@ def get_message():
 
 def send_message(recipient_id, response):
     bot.send_text_message(recipient_id, response)
-    #quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
+    quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
     return "success"
+
+def configure_bot():
+    addr = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token="+ACCESS_TOKEN
+    response = { 
+        "get_started": {"payload": "Begin"},
+        "greeting":[ {
+            "locale": "default",
+            "text": "FIX ME"
+        }]  
+    }
+    resp = requests.post(addr, json = response)
+    print (resp)
+
 
 def send_buttons(recipient_id, inbuttons, action_description):
     buttons = []
@@ -86,10 +115,9 @@ def create_quick_reply(buttons):
     return quick_replies
 
 if __name__ == "__main__":
+    configure_bot()
     app.run()
-'''
-    game_observer = GameObserver()
+
     while (True):
         sleep(30)
         game_observer.update()
-'''        

@@ -1,9 +1,12 @@
 from objects.game import Game
+from objects.user import User
+from utils.score_matches import ScoreMatches
 
-class GameObserver():
+class GameObserver:
     
     _games = [Game]
     _teams = [[]]
+    _users = [User]
 
     def __init__(self):
         self._score = ScoreMatches()
@@ -24,4 +27,12 @@ class GameObserver():
 
     def get_teams(self):
         return self._teams
+
+    def add_user(self, user):
+        self._users.append(user)
+
+    def find_user(self, id):
+        for user in self._users:
+            if user.get_id() == id:
+                return user
 

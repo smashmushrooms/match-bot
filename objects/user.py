@@ -1,6 +1,6 @@
-import front_end as fe
 import json
 import photolab_api as pl
+from dialog_flow.dialog_tree import Dialog
 
 class User():
 
@@ -11,12 +11,12 @@ class User():
     _state = ''
     _game = None
     _scenario = {}
+    _dialog = None
 
-    def __init__(self, name, image_path, id, scenario_path='scenario/base_scenario.json'):
-        self._name = name
-        self._image_path = image_path
+    def __init__(self, id, scenario_path='scenario/base_scenario.json'):
         self._id = id
         self.set_scenario(scenario_path)
+        self._dialog = Dialog(game_observer, self)
 
     def change_state(self, state):
         for st, attr in self._scenario.items():
@@ -30,7 +30,7 @@ class User():
         else:
             pl.miss_cb()
 
-    def set_scenario(self):
+    def set_scenario(self, scenario_path):
         with open(scenario_path) as f:
             self._scenario = json.load(f)
         
@@ -54,3 +54,9 @@ class User():
 
     def get_state(self):
         return self._state
+
+    def get_dialog(self):
+        return self._dialog
+
+    def get_id(self):
+        return self._id
