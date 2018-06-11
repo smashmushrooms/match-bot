@@ -7,7 +7,7 @@ class User():
     _id = ''
     _current_lovely_team = ''
     _image_path = ''
-    _state = ''
+    _state = 'idle'
     _scenario = {}
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
@@ -16,9 +16,9 @@ class User():
 
     def change_state(self, state):
         for st, attr in self._scenario.items():
-            if self._state == st:
-                if state == attr['prev_st']:
-                    eval(attr['action'])()
+            if self._state == attr['prev_st']:
+                eval(attr['action'])()
+                self._state = state
 
     def score_changed(self, delta):
         if delta:

@@ -16,7 +16,7 @@ class GameObserver:
         self._teams = self._score.get_matches_names()
         for team in self._teams:
             match_time = self._score.get_score(team)['time'].split('-')
-            game = Game(team, datetime(2018, 6, 11, 16, 46), self._score)
+            game = Game(team, datetime(2018, 6, 11, 17, 12), self._score)
             self._games.append(game)
 
     def update_state(self):

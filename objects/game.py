@@ -19,9 +19,6 @@ class Game:
 
     def update(self):
         now = datetime.now()
-        if now.hour == 0 and now.minute == 0:
-            # TODO Restart dialog system
-            pass
         
         response = self._score_matches.get_score(self._teams)
         time = response['time']
