@@ -2,20 +2,19 @@ from objects.user import User
 from datetime import datetime
 from utils.score_matches import Score_Matches
 
-
 class Game:
-    _score = [0, 0]
-    _teams = []
-    _team1_fans = []
-    _team2_fans = []
-    _time_of_game = None
-    _score_matches = None
-    _state = 'idle'
 
     def __init__(self, teams, time, score):
         self._teams = teams
         self._time_of_game = time
         self._score_matches = score
+        self._team1_fans = []
+        self._team2_fans = []
+        self._score = [0, 0]
+        self._teams = []
+        self._time_of_game = None
+        self._score_matches = None
+        self._state = 'idle'
 
     def update(self):
         now = datetime.now()
@@ -48,9 +47,6 @@ class Game:
             user.change_state(fans_state2)
 
     def _time_to_game(self):
-        print(self)
-        print(self._team1_fans)
-        print(self._team2_fans)
         now = datetime.now()
         delta = self._time_of_game - now
         hours = delta.seconds // 3600
@@ -74,6 +70,7 @@ class Game:
             self._team1_fans.append(user)
         else:
             self._team2_fans.append(user)
+        user.set_game(self)
 
     def get_teams(self):
         return self._teams

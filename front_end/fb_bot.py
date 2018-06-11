@@ -21,9 +21,6 @@ class Dialog:
         'start_scenario': 'self.start_scenario'
     }
 
-    _state = ''
-    _game_observer = None
-    _user = None
 
     def get_random_message(self, messages):
         return random.choice(messages, 1)[0]

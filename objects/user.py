@@ -24,21 +24,22 @@ def ended():
     print("ended")
 
 class User:
-    _id = ''
-    _user_directory = ''
-    _current_lovely_team = ''
-    _image_path = ''
-    _state = 'idle'
-    _scenario = {}
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
         self._id = id
+        self._id = ''
+        self._user_directory = ''
+        self._current_lovely_team = ''
+        self._image_path = ''
+        self._state = 'idle'
+        self._scenario = {}
         self.set_scenario(scenario_path)
+        self._game = None
 
     def change_state(self, state):
         for st, attr in self._scenario.items():
             if self._state == attr['prev_st']:
-                eval(attr['action'])()
+                eval(attr['action'])([self._image_path, self._image_path], game.get_teams())
                 self._state = state
 
     def score_changed(self, delta):
@@ -74,3 +75,6 @@ class User:
 
     def get_id(self):
         return self._id
+
+    def set_game(self, game):
+        self._game = game
