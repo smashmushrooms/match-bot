@@ -1,9 +1,9 @@
 {
-    "idle": {"prev_st": "ended", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "before_3_hours": {"prev_st": "idle", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "before_1_5_hour": {"prev_st": "before_3_hours", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "before_1_hour": {"prev_st": "before_1_5_hour", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "match_started": {"prev_st": "before_1_hour", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "match_ended": {"prev_st": "match_started", "action": "post2photlab_versus", "description": "Prodam garage"},
-    "ended": {"prev_st": "match_ended", "action": "post2photlab_versus", "description": "Prodam garage"}
+    "idle": {"prev_st": "ended", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "before_3_hours": {"prev_st": "idle", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "before_1_5_hour": {"prev_st": "before_3_hours", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "before_1_hour": {"prev_st": "before_1_5_hour", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "match_started": {"prev_st": "before_1_hour", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "match_ended": {"prev_st": "match_started", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "ended": {"prev_st": "match_ended", "action": "pl.post2photlab_versus", "description": "Prodam garage"}
 }

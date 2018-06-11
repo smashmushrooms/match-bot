@@ -1,50 +1,36 @@
 import json
 import os
 import utils.photolab_api as pl
-
-def idle():
-    print("idle")
-
-def face_flag():
-    print("face_flag")
-
-def changing_room():
-    print("changing_room")
-
-def warm_up():
-    print("warm_up")
-
-def match_started():
-    print("match_started")
-
-def match_ended():
-    print("match_ended")
-
-def ended():
-    print("ended")
-
+from objects.dialog import Dialog
+from threading import Condition
 class User:
+
+    _game_observer = None
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
         self._id = id
         self._current_lovely_team = ''
         self._image_url = ''
-        self._state = 'idle'
+        self._state = 'ended'
         self._scenario = {}
         self.set_scenario(scenario_path)
         self._game = None
+        self._dialog = Dialog(id)
+        self._dialog.set_game_observer(self._game_observer)
 
     def change_state(self, state):
         for st, attr in self._scenario.items():
             if self._state == attr['prev_st']:
-                eval(attr['action'])([self._image_url, self._image_url], game.get_teams())
+                url = eval(attr['action'])(flags = [self._image_url, self._image_url],
+                                           teams = self._game.get_teams())
+                self._dialog.set_image_url(url)
                 self._state = state
 
     def score_changed(self, delta):
         if delta:
-            pl.goal_cb()
+            goal_cb()
         else:
-            pl.miss_cb()
+            miss_cb()
 
     def set_scenario(self, scenario_path):
         with open(scenario_path) as f:
@@ -76,3 +62,14 @@ class User:
 
     def set_game(self, game):
         self._game = game
+
+    def dialog_update(self, message=''):
+        if self._dialog.get_state() == 'start_scenario':
+            self.set_lovely_team(message)
+            self._state = 'idle'
+            self._game_observer.add_fan(self)
+
+        self._dialog.dialog_update(message)
+
+    def send_message(self, message):
+        self._dialog.send_message(message)
