@@ -3,8 +3,9 @@ import os
 import utils.photolab_api as pl
 from objects.dialog import Dialog
 from threading import Condition
-class User:
+from objects.dialog import get_random_object
 
+class User:
     _game_observer = None
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
@@ -25,8 +26,15 @@ class User:
                 print('New state:', state)
                 if self._state == state:
                     return
-                url = eval(attr['action'])(photos=[self._image_url, self._image_url],
-                                           teams=self._game.get_teams())
+                if self._state == 'ended':
+                    if self._current_lovely_team == self._game.get_teams()[0]:
+                        opponent_photo_url = get_random_object(get_random_object(self._game._team2_fans))
+                        url = eval(attr['action'])(photos=[self._image_url, opponent_photo_url],
+                                                   teams=self._game.get_teams())
+                    else:
+                        opponent_photo_url = get_random_object(get_random_object(self._game._team1_fans))
+                        url = eval(attr['action'])(photos=[opponent_photo_url, self._image_url],
+                                                   teams=self._game.get_teams())
                 self._state = state
                 self._dialog.send_image_url(url)
 
