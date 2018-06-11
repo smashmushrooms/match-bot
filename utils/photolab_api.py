@@ -4,6 +4,7 @@ from used_dict import templates_names, country_flag, URL
 
 
 def post2photlab_versus(photos, teams):
+    print('asd')
     """
         Generate versus photo
         photos - list of url as type str
