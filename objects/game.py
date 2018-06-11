@@ -1,9 +1,9 @@
-from user import User
-from datetime import datetime, date, time
-from score_matches import Score_Matches
+from objects.user import User
+from datetime import datetime
+from utils.score_matches import Score_Matches
+
 
 class Game:
-
     _score = [0, 0]
     _teams = []
     _team1_fans = [User]
@@ -21,7 +21,7 @@ class Game:
         if now.hours == 0 and now.minutes == 0:
             # TODO Restart dialog system
             pass
-        
+
         response = self._score_matches.get_score(self._teams)
         # TODO Use match time
         score = [response['score_firts'], response['score_second']]
@@ -42,7 +42,7 @@ class Game:
         for user in self._team2_fans:
             user.change_state(fans_state2)
 
-    def _time_to_game(self, game_time):
+    def _time_to_game(self):
         now = datetime.datetime.now()
         delta = now - self._time_of_game
         if delta.hours == 3 and delta.minutes == 0:

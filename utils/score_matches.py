@@ -50,9 +50,11 @@ russian2english = {'Россия': 'Russia',
                    'Япония': 'Japan'
                    }
 
+english2russian = dict(zip(russian2english.values(), russian2english.keys()))
+
 
 class Score_Matches:
-    '''
+    """
         example:
             score = Score_Matches('Чемпионат Мира' , '2018-6-19')
             score.get_matches_names()
@@ -61,12 +63,17 @@ class Score_Matches:
             score.get_score(['Poland', 'Senegal'])
             >>>{'score_first': '-',
                 'score_second': '-',
-                'time': datetime.datetime(2018, 6, 19, 18, 0)}
-
-    '''
+                'time': 18:00}
+        time - str
+            If the match has not started, the time is stored in the start time. ('18:00')
+            If the match continues, the minute of the match is stored in time. ('9' or '73')
+            If there is a break in the match, the 'Перерыв' is stored in time. ('Перерыв')
+            If the match ended recently, the 'Закончен' is stored in time. ('Закочен')
+            If the match ended long ago, the date of the end of match is stored in time. ('13.05.18')
+    """
 
     def __init__(self, name_of_champ='Чемпионат Мира', date=None):
-        '''
+        """
             name_of_champ - str:
                 Supported Championships:
                     'Чемпионат Мира',
@@ -83,19 +90,18 @@ class Score_Matches:
 
             date - str:
                 format - year-month-day
-        '''
+        """
         self._name_of_champ = name_of_champ
         self._date = date
 
         self._dict_match = {}
         self._url = False
-
         self._get_matches()
 
     def _check_date(self):
-        '''
+        """
             Date check.
-        '''
+        """
         if not isinstance(self._date, str):
             print('Date must be str')
             self._date = False
@@ -118,9 +124,9 @@ class Score_Matches:
         self._date = str(year) + '-' + str(month) + '-' + str(day)
 
     def _get_url(self):
-        '''
+        """
             Generation of the request url.
-        '''
+        """
 
         if self._name_of_champ not in championats:
             print('Incorrect name of championat')
@@ -138,19 +144,19 @@ class Score_Matches:
                 return
 
         self._url = 'http://soccer365.ru/online/&competition_id=' + \
-            _id + '&date=' + self._date
+                    _id + '&date=' + self._date
 
     def _get_match_score(self):
-        '''
+        """
             Getting information about matches by url.
-        '''
+        """
         if not self._url:
             return
 
         s = requests.get(self._url)
-        b = bs4.BeautifulSoup(s.text, "html.parser")
+        self._b = bs4.BeautifulSoup(s.text, "html.parser")
 
-        for match in b.select('.game_block'):
+        for match in self._b.select('.game_block'):
             match = match.getText().replace('\t', '').replace('\xa0', '').split('\n')
             match = list(filter(lambda x: x != '', match))
 
@@ -177,31 +183,55 @@ class Score_Matches:
                                             'score_second': score_second}
 
     def _get_matches(self):
-        '''
+        """
             Processing of all necessary functions.
-        '''
+        """
         self._get_url()
         if self._url:
             self._get_match_score()
         return self._dict_match
 
     def get_matches_names(self):
-        '''
+        """
             Getting a list of all matches on the date.
-        '''
+        """
         self._names = list(self._dict_match.keys())
         return [i.split('__') for i in self._names]
 
     def get_score(self, teams):
-        '''
+        """
             teams - list:
                 format - [first_team , second_team]
                 first_team - str
                 second_team - str
-        '''
+        """
         match_name = '__'.join(teams)
         if match_name not in self._names:
             print('This match is not today')
             return {}
         match = self._dict_match[match_name]
         return {'time': match['time'], 'score_first': match['score_first'], 'score_second': match['score_second']}
+
+    def get_city(self, teams):
+        """
+            teams - list:
+                format - [first_team , second_team]
+                first_team - str
+                second_team - str
+        """
+        match_name = '__'.join(teams)
+        if match_name not in self._names:
+            print('This match is not today')
+            return ''
+
+        teams = ' - '.join([english2russian[x] for x in teams])
+        for match in self._b.select('.game_link'):
+            if match.get('title') == teams:
+                url_match = 'http://soccer365.ru' + match.get('href')
+                break
+
+        s = requests.get(url_match)
+        b = bs4.BeautifulSoup(s.text, "html.parser")
+
+        match = b.select('.preview_item')[0]
+        return match.select('.min_gray')[0].getText().split(',')[0]
