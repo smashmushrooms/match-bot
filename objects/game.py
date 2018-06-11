@@ -1,9 +1,9 @@
-from user import User
-from datetime import datetime, date, time
-from score_matches import Score_Matches
+from objects.user import User
+from datetime import datetime
+from utils.score_matches import Score_Matches
+
 
 class Game:
-
     _score = [0, 0]
     _teams = []
     _team1_fans = []
@@ -19,7 +19,7 @@ class Game:
 
     def update(self):
         now = datetime.now()
-        
+
         response = self._score_matches.get_score(self._teams)
         time = response['time']
         if time == 'Завершен':

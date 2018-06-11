@@ -3,6 +3,7 @@ from objects.user import User
 from utils.score_matches import Score_Matches
 from datetime import datetime, time
 
+
 class GameObserver:
     
     _games = []

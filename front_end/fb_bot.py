@@ -1,4 +1,4 @@
-#Python libraries that we need to import for our bot
+# Python libraries that we need to import for our bot
 import random
 import shutil
 from flask import Flask, request
@@ -107,6 +107,7 @@ class Dialog:
     def get_state(self):
         return self._state
 
+
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
@@ -114,12 +115,13 @@ bot = Bot(ACCESS_TOKEN)
 game_observer = GameObserver()
 dialogs = {}
 
-#We will receive messages that Facebook sends our bot at this endpoint 
+
+# We will receive messages that Facebook sends our bot at this endpoint
 @app.route("/", methods=['GET', 'POST'])
 def receive_message():
     if request.method == 'GET':
         """Before allowing people to message your bot, Facebook has implemented a verify token
-        that confirms all requests that your bot receives came from Facebook.""" 
+        that confirms all requests that your bot receives came from Facebook."""
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
     else:
@@ -163,34 +165,40 @@ def receive_message():
 
     return "Message Processed"
 
+
 def _user_init(id):
     user = User(id)
     global dialogs
     dialogs[id] = Dialog(game_observer, user)
 
-def verify_fb_token(token_sent): 
+
+def verify_fb_token(token_sent):
     if token_sent == VERIFY_TOKEN:
         return request.args.get("hub.challenge")
     return 'Invalid verification token'
 
+
 def get_message():
-    sample_responses = ["You are stunning!", "We're proud of you.", "Keep on being you!", "We're greatful to know you :)"]
+    sample_responses = ["You are stunning!", "We're proud of you.", "Keep on being you!",
+                        "We're greatful to know you :)"]
     return random.choice(sample_responses)
+
 
 def send_message(recipient_id, response):
     bot.send_text_message(recipient_id, response)
     return "success"
 
+
 def configure_bot():
-    addr = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token="+ACCESS_TOKEN
-    response = { 
+    addr = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token=" + ACCESS_TOKEN
+    response = {
         "get_started": {"payload": "Begin"},
-        "greeting":[ {
+        "greeting": [{
             "locale": "default",
             "text": "FIX ME"
-        }]  
+        }]
     }
-    resp = requests.post(addr, json = response)
+    resp = requests.post(addr, json=response)
 
 
 def send_buttons(recipient_id, inbuttons, action_description):
@@ -201,9 +209,11 @@ def send_buttons(recipient_id, inbuttons, action_description):
     bot.send_button_message(recipient_id, action_description, buttons)
     return "success"
 
+
 def send_photo(recipient_id, photo_path):
     result = bot.send_image(recipient_id, photo_path)
     return result
+
 
 def quick_reply_send(recipient_id, buttons, text):
     quick_replies = create_quick_reply(buttons)
@@ -212,6 +222,7 @@ def quick_reply_send(recipient_id, buttons, text):
         "quick_replies": quick_replies
     }
     bot.send_message(recipient_id, message)
+
 
 def create_quick_reply(buttons):
     quick_replies = []
@@ -223,11 +234,16 @@ def create_quick_reply(buttons):
         }
         if btn[2] != '':
             quick_reply['image_url'] = btn[2]
-        
+
         quick_replies.append(quick_reply)
     return quick_replies
 
-import threading
+
+def observer_thread():
+    while True:
+        sleep(1)
+        game_observer.update()
+
 
 class ObsereverThread(Thread):
     def __init__(self):
