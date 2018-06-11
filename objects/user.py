@@ -10,7 +10,6 @@ class User:
     _current_lovely_team = ''
     _image_path = ''
     _state = ''
-    _game = None
     _scenario = {}
 
     def __init__(self, id, scenario_path='scenario/base_scenario.json'):
@@ -35,7 +34,6 @@ class User:
             self._scenario = json.load(f)
 
     def set_lovely_team(self, team):
-        print(team)
         self._current_lovely_team = team
 
     def set_photo(self, image_path):
