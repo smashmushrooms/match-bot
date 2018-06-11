@@ -3,6 +3,7 @@ import random
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pymessenger import Element, Button
+#from game_observer import GameObserver
 
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHlX7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
@@ -47,6 +48,7 @@ def get_message():
 
 def send_message(recipient_id, response):
     bot.send_text_message(recipient_id, response)
+    #quick_reply_send(recipient_id, [['Test', 'My test message', 'https://www.partan.eu/static/img/flags/xru.png.pagespeed.ic.ksQyMMYVcM.png']], 'Yess')
     return "success"
 
 def send_buttons(recipient_id, inbuttons, action_description):
@@ -61,5 +63,33 @@ def send_photo(recipient_id, photo_path):
     result = bot.send_image(recipient_id, photo_path)
     return result
 
+def quick_reply_send(recipient_id, buttons, text):
+    quick_replies = create_quick_reply(buttons)
+    message = {
+        "text": text,
+        "quick_replies": quick_replies
+    }
+    bot.send_message(recipient_id, message)
+
+def create_quick_reply(buttons):
+    quick_replies = []
+    for btn in buttons:
+        quick_reply = {
+            "content_type": "text",
+            "title": btn[0],
+            "payload": btn[1]
+        }
+        if btn[2] != '':
+            quick_reply['image_url'] = btn[2]
+        
+        quick_replies.append(quick_reply)
+    return quick_replies
+
 if __name__ == "__main__":
     app.run()
+'''
+    game_observer = GameObserver()
+    while (True):
+        sleep(30)
+        game_observer.update()
+'''        

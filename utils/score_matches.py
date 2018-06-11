@@ -199,3 +199,17 @@ class ScoreMatches:
             return {}
         match = self._dict_match[match_name]
         return {'time': match['time'], 'score_first': match['score_first'], 'score_second': match['score_second']}
+
+    def get_match_time(self, teams):
+        '''
+            teams - list:
+                format - [first_team , second_team]
+                first_team - str
+                second_team - str
+        '''
+        match_name = '-'.join(teams)
+        if match_name not in self._names:
+            print('This match is not today')
+            return {}
+        match = self._dict_match[match_name]
+        return {'time': match['time']}

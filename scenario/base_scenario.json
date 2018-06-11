@@ -1,9 +1,9 @@
 {
-    "idle": {"prev_st": "ended", "action": "idle"},
-    "face_flag": {"prev_st": "idle", "action": "face_flag"},
-    "changing_room": {"prev_st": "face_flag", "action": "changing_room"},
-    "warm_up": {"prev_st": "changing_room", "action": "warm_up"},
-    "match_started": {"prev_st": "warm_up", "action": "match_started"},
-    "match_ended": {"prev_st": "match_started", "action": "match_ended"},
-    "ended": {"prev_st": "match_ended", "action": "ended"}
+    "idle": {"prev_st": "ended", "action": "idle", "description": "Prodam garage"},
+    "before_3_hours": {"prev_st": "idle", "action": "face_flag", "description": "Prodam garage"},
+    "before_1_5_hour": {"prev_st": "before_3_hours", "action": "changing_room", "description": "Prodam garage"},
+    "before_1_hour": {"prev_st": "before_1_5_hour", "action": "warm_up", "description": "Prodam garage"},
+    "match_started": {"prev_st": "before_1_hour", "action": "match_started", "description": "Prodam garage"},
+    "match_ended": {"prev_st": "match_started", "action": "match_ended", "description": "Prodam garage"},
+    "ended": {"prev_st": "match_ended", "action": "ended", "description": "Prodam garage"}
 }
