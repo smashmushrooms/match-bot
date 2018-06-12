@@ -1,5 +1,5 @@
 {
-    "idle": {"prev_st": "ended", "action": "pl.post2photlab_versus", "description": "Prodam garage"},
+    "idle": {"prev_st": "ended", "action": "pl.post2photlab_stadium", "description": "Prodam garage"},
     "before_3_hours": {"prev_st": "idle", "action": "pl.post2photlab", "description": "Prodam garage"},
     "before_1_5_hour": {"prev_st": "before_3_hours", "action": "pl.post2photlab", "description": "Prodam garage"},
     "before_1_hour": {"prev_st": "before_1_5_hour", "action": "pl.post2photlab", "description": "Prodam garage"},

@@ -40,20 +40,37 @@ class User:
                         url = eval(attr['action'])(photos=[opponent_photo_url, self._image_url],
                                                   teams=self._game.get_teams())
                     text = 'Your text'
+
                 elif self._state == 'match_ended':
-                    text = 'Text'
-                    url = eval(attr['action'])(photo=self._image_url,
-                                                template='soccer_man')
-                    self.state = state
-                elif self._state == 'before_3_hours':
-                    text = 'Text'
-                elif self._state == 'before_1_5_hours':
-                    text = 'Text'
-                elif self._state == 'before_1_hour':
+
                     text = 'Text'
 
-                self._dialog.send_image_url(url)
+                elif state == 'before_3_hours':
+                    
+                    text = 'Text'
+
+                elif state == 'before_1_5_hours':
+                    url = eval(attr['action'])(photo=self._image_url,
+                                                template='soccer_man')
+                    text = 'Text'
+
+                elif state == 'before_1_hour':
+                    text = 'Text'
+                    url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
+                    self._dialog.send_image_url(url)
+                    self._dialog.send_message(text)
+                    self._state = state                
+                    return
+                    # TODO
+
+                elif state == 'idle':
+                    url = pl.post2photlab_stadium(self._image_url, self._current_lovely_team,
+                            self._game._score_matches.get_city(self._game.get_teams()))
+                    text = 'Text'
+                
+                self._state = state                
                 self._dialog.send_message(text)
+                self._dialog.send_image_url(url)
 
     def score_changed(self, delta):
         if delta:
