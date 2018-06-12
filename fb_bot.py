@@ -99,10 +99,10 @@ if __name__ == "__main__":
     configure_bot()
 
     default_user = User(-1)
-    default_user._image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:' \
-                              'ANd9GcSHIn33BSl41Hh6O94FTVwb5PkLS6BOJZWr-JVWxADHTd-LVdRK'
-    default_user._current_lovely_team = 'Russia'
+    default_user._image_url = 'https://c1.staticflickr.com/9/8724/16976740485_fe1579c5a5_b.jpg'
+    default_user._current_lovely_team = 'Japan'
     default_user._state = None
+    game_observer.add_fan(default_user)
 
     users.update()
 

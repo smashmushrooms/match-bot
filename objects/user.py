@@ -4,6 +4,7 @@ import utils.photolab_api as pl
 from objects.dialog import Dialog
 from threading import Condition
 from objects.dialog import get_random_object
+from utils.used_dict import templates_names
 
 class User:
     _game_observer = None
@@ -26,16 +27,23 @@ class User:
                 print('New state:', state)
                 if self._state == state:
                     return
+                print(self._game.get_teams())
                 if self._state == 'ended':
                     if self._current_lovely_team == self._game.get_teams()[0]:
-                        opponent_photo_url = get_random_object(get_random_object(self._game._team2_fans))
-                        url = eval(attr['action'])(photos=[self._image_url, opponent_photo_url],
-                                                   teams=self._game.get_teams())
+                        print (self._game._team2_fans)
+                        opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
+                        url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
+                                                  teams=self._game.get_teams())                        
                     else:
-                        opponent_photo_url = get_random_object(get_random_object(self._game._team1_fans))
-                        url = eval(attr['action'])(photos=[opponent_photo_url, self._image_url],
-                                                   teams=self._game.get_teams())
-                self._state = state
+                        opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
+                        print (self._game._team1_fans)
+                        url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
+                                                  teams=self._game.get_teams())
+                    self._state = 'idle'
+                else:
+                    url = eval(attr['action'])(photo=self._image_url,
+                                                template='soccer_man')
+                    self.state = state
                 self._dialog.send_image_url(url)
 
     def score_changed(self, delta):
