@@ -175,7 +175,7 @@ def post2photlab(photo, template):
 
     return response.text
 
-def get_picture( search_request):
+def get_picture(search_request):
     headers = {
         'Ocp-Apim-Subscription-Key': '5a34d5fcb6854836a606a6f4bae9477f',
     }

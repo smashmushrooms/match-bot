@@ -9,8 +9,8 @@ templates_names = {
     'nature_3': '390C51FB-F821-C774-B160-79645CD9A64D',
     'nature_4': '088F2063-DB62-F214-AD0D-067DE1628FE3',
     'nature_5': '0471F2CA-F132-CE74-E11B-CA9A8F45C997',
-    'nature_6': '315FAF56-7C67-DB44-050A-4D8D57943E62'
-
+    'nature_6': '315FAF56-7C67-DB44-050A-4D8D57943E62',
+    'final_post': 'CFD582FF-A03B-A854-1525-6EE310D97E9D'
 }
 
 championats = {'Англия, Премьер лига': '12',

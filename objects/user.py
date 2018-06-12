@@ -31,10 +31,10 @@ class User:
                 break
             except AttributeError:
                 pass
-        #url = self._image_url
-        text = 'Text'
+
         if self._state == 'match_started':
-            text = 'Text'
+            text = 'Today\'s match will be watched by millions of people around the world. ' \
+                   'Here goes your personal opponent from the opposite side... Let the battle begin!'
             if self._current_lovely_team == self._game.get_teams()[0]:
                 print (self._game._team2_fans)
                 opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
@@ -45,34 +45,35 @@ class User:
                 print (self._game._team1_fans)
                 url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
                                           teams=self._game.get_teams())
-            text = 'Your text'
         elif self._state == 'match_ended':
             city_name = self._game._score_matches.get_city(self._game.get_teams())
-            url = pl.post2photlab_final_post([self._image_url] + [fan._image_url for fan in self._game._team1_fans],
+            print(self._game._team1_fans)
+            url = pl.post2photlab_final_post([fan._image_url for fan in self._game._team1_fans],
                                              self._current_lovely_team, city_name)
-            text = 'This is the end of the match!'
+            text = 'This is the end of the match! Well done, fans!'
         elif self._state == 'before_3_hours':
-            url = pl.post2photlab(photo=self._image_url,
-                                    template='soccer_man')
-            text = 'Text'
+            text = 'Saint Petersburg is a beautiful city, surprising with its atmosphere and architecture. ' \
+                   'Of course all it\'s magnificence can not be fitted in one photo... But we have imposed cool ' \
+                   'filters from the application PhotoLab ;)'
+            url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
+            self._dialog.send_message(text)
+            self._dialog.send_image_url(url)
+            self._dialog.send_image_url(fixed_url)
+            return
         elif self._state == 'before_1_5_hours':
-            url = pl.post2photlab(photo=self._image_url,
-                                    template='soccer_man')
-            text = 'Text'
+            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
+            text = 'Only a couple of hours left until the match! All warm up!'
         elif self._state == 'before_1_hour':
             return
             # TODO
+            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
             text = 'Text'
-            url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
-            self._dialog.send_image_url(url)
-            self._dialog.send_image_url(fixed_url)
-            self._dialog.send_message(text)
-            return
-            # TODO
         elif self._state == 'idle':
             url = pl.post2photlab_stadium(self._image_url, self._current_lovely_team,
                     self._game._score_matches.get_city(self._game.get_teams()))
-            text = 'Text'
+            text = 'The game will take place in the Krestovsky stadium. Move all the stuff around and ' \
+                   'do not miss one of the main football events of the next 4 years! MatchBot will ' \
+                   'keep you informed! In touch :)'
 
         self._dialog.send_message(text)
         self._dialog.send_image_url(url)
