@@ -3,6 +3,7 @@ import bs4
 import numpy as np
 import os
 from utils.used_dict import *
+from random import randint
 
 
 def post2photlab_versus(photos, teams):
@@ -174,40 +175,58 @@ def post2photlab(photo, template):
 
     return response.text
 
+def get_picture( search_request):
+    headers = {
+        'Ocp-Apim-Subscription-Key': '5a34d5fcb6854836a606a6f4bae9477f',
+    }
+
+    params = {
+        'q': search_request,
+        'count': '10',
+        'offset': '0',
+        'mkt': 'en-us',
+        'safeSearch': 'Moderate',
+    }
+
+    response = requests.get(
+        'https://api.cognitive.microsoft.com/bing/v7.0/images/search?%s',
+        params=params,
+        headers=headers
+    )
+
+    if response.status_code != 200:
+        response.raise_for_status()
+
+    try:
+        picture_url = response.json()['value'][randint(0, 7)]['contentUrl']
+    except IndexError or KeyError:
+        try:
+            picture_url = response.json()['value'][0]['contentUrl']
+        except IndexError or KeyError:
+            picture_url = None
+
+    return picture_url
 
 def generate_city_photo(city):
     """
         Return url photo of city from yandex and url after photolab.
         city - str
     """
-    city = 'красивые места ' + city
-    search_city = "https://yandex.ru/images/search?text=" + city
 
-    while True:
-        s = requests.get(search_city)
-        b = bs4.BeautifulSoup(s.text, "html.parser")
-        count = 0
-        good_url = []
-        try:
-            for match in b.select('.serp-item__link'):
-                url = match.get('href').split('=')[2]
-                url = url.replace('%3A', ':').replace('%2F', '/').split('&')[0]
-                if url[-4:] == '.jpg':
-                    count += 1
-                    good_url.append(url)
-                if count == 10:
-                    break
-
-            if not good_url:
-                os.system('sleep 1')
-                print(s.url)
-
-            url = np.random.choice(good_url, 1)[0]
-            template = 'nature_' + str(np.random.choice(range(1, 7)))
-            break
-        except Exception:
-            pass
+    url = get_picture(city)
+    template = 'nature_' + str(np.random.choice(range(1, 7)))
 
     new_url = post2photlab(url, template)
 
     return url, new_url
+
+
+
+
+
+
+
+
+
+
+
