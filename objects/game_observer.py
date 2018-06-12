@@ -4,7 +4,6 @@ from utils.score_matches import Score_Matches
 from datetime import datetime, time
 
 class GameObserver:
-    
     _games = []
     _teams = [[]]
 
@@ -17,7 +16,7 @@ class GameObserver:
         self._teams = self._score.get_matches_names()
         for team in self._teams:
             match_time = self._score.get_score(team)['time'].split('-')
-            game = Game(team, datetime(2018, 6, 12, 4, 35))
+            game = Game(team, datetime(2018, 6, 12, 7, 26))
             self._games.append(game)
 
     def update_state(self):

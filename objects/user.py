@@ -21,56 +21,61 @@ class User:
         self._dialog.set_game_observer(self._game_observer)
 
     def change_state(self, state):
-        for st, attr in self._scenario.items():
-            if self._state == attr['prev_st']:
-                print('Previous state:', self._state)
-                print('New state:', state)
-                if self._state == state:
-                    return
-                print(self._game.get_teams())
-                if self._state == 'match_started':
-                    if self._current_lovely_team == self._game.get_teams()[0]:
-                        print (self._game._team2_fans)
-                        opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
-                        url = eval(attr['action'])(photos=[self._image_url, opponent_photo_url],
-                                                  teams=self._game.get_teams())                        
-                    else:
-                        opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
-                        print (self._game._team1_fans)
-                        url = eval(attr['action'])(photos=[opponent_photo_url, self._image_url],
-                                                  teams=self._game.get_teams())
-                    text = 'Your text'
+        if self._state == state:
+            return
+        self._state = state
+        while True:
+            try:
+                print('NoneType')
+                self._game.get_teams()
+                break
+            except AttributeError:
+                pass
+        #url = self._image_url
+        text = 'Text'
+        if self._state == 'match_started':
+            text = 'Text'
+            if self._current_lovely_team == self._game.get_teams()[0]:
+                print (self._game._team2_fans)
+                opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
+                url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
+                                          teams=self._game.get_teams())
+            else:
+                opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
+                print (self._game._team1_fans)
+                url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
+                                          teams=self._game.get_teams())
+            text = 'Your text'
+        elif self._state == 'match_ended':
+            url = self._image_url
+            text = 'Text'
+        elif self._state == 'before_3_hours':
+            url = pl.post2photlab(photo=self._image_url,
+                                    template='soccer_man')
+            text = 'Text'
+        elif self._state == 'before_1_5_hours':
+            return
+            # TODO
+            url = pl.post2photlab(photo=self._image_url,
+                                    template='soccer_man')
+            text = 'Text'
+        elif self._state == 'before_1_hour':
+            return
+            # TODO
+            text = 'Text'
+            url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
+            self._dialog.send_image_url(url)
+            self._dialog.send_image_url(fixed_url)
+            self._dialog.send_message(text)
+            return
+            # TODO
+        elif self._state == 'idle':
+            url = pl.post2photlab_stadium(self._image_url, self._current_lovely_team,
+                    self._game._score_matches.get_city(self._game.get_teams()))
+            text = 'Text'
 
-                elif self._state == 'match_ended':
-
-                    text = 'Text'
-
-                elif state == 'before_3_hours':
-                    
-                    text = 'Text'
-
-                elif state == 'before_1_5_hours':
-                    url = eval(attr['action'])(photo=self._image_url,
-                                                template='soccer_man')
-                    text = 'Text'
-
-                elif state == 'before_1_hour':
-                    text = 'Text'
-                    url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
-                    self._dialog.send_image_url(url)
-                    self._dialog.send_message(text)
-                    self._state = state                
-                    return
-                    # TODO
-
-                elif state == 'idle':
-                    url = pl.post2photlab_stadium(self._image_url, self._current_lovely_team,
-                            self._game._score_matches.get_city(self._game.get_teams()))
-                    text = 'Text'
-                
-                self._state = state                
-                self._dialog.send_message(text)
-                self._dialog.send_image_url(url)
+        self._dialog.send_message(text)
+        self._dialog.send_image_url(url)
 
     def score_changed(self, delta):
         if delta:
@@ -111,8 +116,9 @@ class User:
 
     def dialog_update(self, message=''):
         if self._dialog.get_state() == 'start_scenario':
+            if message:
+                self.set_lovely_team(message)
             self._game_observer.add_fan(self)
-            self.set_lovely_team(message)
             self.change_state('idle')
         self._dialog.dialog_update(message)
 

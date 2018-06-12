@@ -1,7 +1,7 @@
 import requests
 import bs4
 import numpy as np
-from used_dict import *
+from utils.used_dict import *
 
 
 def post2photlab_versus(photos, teams):
@@ -155,8 +155,8 @@ def generate_city_photo(city):
         if count == 10:
             break
 
-    url = np.random.choice(good_url)
-    template = 'nature_' + str(np.random.choice(range(1,7)))
+    url = np.random.choice(good_url, 1)[0]
+    template = 'nature_' + str(np.random.choice(range(1, 7)))
 
     new_url = post2photlab(url, template)
 

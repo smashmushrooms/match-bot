@@ -23,8 +23,6 @@ class Dialog(object):
         'scenario': 'self.scenario'
     }
 
-
-
     def __init__(self, id):
         self._state = 'nil'
         self._id = id
@@ -86,8 +84,16 @@ class Dialog(object):
             'Who do you support?',
             'Who would win?'
         ]
-        self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
-                              get_random_object(side_requests))
+
+        while True:
+            try:
+                print('IndexError')
+                self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
+                                      get_random_object(side_requests))
+                break
+            except AttributeError:
+                pass
+
         self._state = 'start_scenario'
 
     def start_scenario(self, text):

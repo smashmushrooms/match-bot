@@ -2,7 +2,7 @@ import requests
 import bs4
 import numpy as np
 from datetime import datetime
-from used_dict import *
+from utils.used_dict import *
 
 
 class Score_Matches:
