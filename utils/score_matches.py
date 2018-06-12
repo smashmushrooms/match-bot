@@ -10,7 +10,7 @@ class Score_Matches:
         example:
             score = Score_Matches('Чемпионат Мира' , '2018-6-19')
             score.get_matches_names()
-                [['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Japan']]
+                [['Russia', 'Egypt'], ['Poland', 'Senegal'], ['Colombia', 'Russia']]
 
             score.get_score(['Poland', 'Senegal'])
                 {'score_first': '-',

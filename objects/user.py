@@ -28,23 +28,32 @@ class User:
                 if self._state == state:
                     return
                 print(self._game.get_teams())
-                if self._state == 'ended':
+                if self._state == 'match_started':
                     if self._current_lovely_team == self._game.get_teams()[0]:
                         print (self._game._team2_fans)
                         opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
-                        url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
+                        url = eval(attr['action'])(photos=[self._image_url, opponent_photo_url],
                                                   teams=self._game.get_teams())                        
                     else:
                         opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
                         print (self._game._team1_fans)
-                        url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
+                        url = eval(attr['action'])(photos=[opponent_photo_url, self._image_url],
                                                   teams=self._game.get_teams())
-                    self._state = 'idle'
-                else:
+                    text = 'Your text'
+                elif self._state == 'match_ended':
+                    text = 'Text'
                     url = eval(attr['action'])(photo=self._image_url,
                                                 template='soccer_man')
                     self.state = state
+                elif self._state == 'before_3_hours':
+                    text = 'Text'
+                elif self._state == 'before_1_5_hours':
+                    text = 'Text'
+                elif self._state == 'before_1_hour':
+                    text = 'Text'
+
                 self._dialog.send_image_url(url)
+                self._dialog.send_message(text)
 
     def score_changed(self, delta):
         if delta:

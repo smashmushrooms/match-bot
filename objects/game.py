@@ -19,11 +19,13 @@ class Game:
 
         response = self._score_matches.get_score(self._teams)
         time = response['time']
+        '''
         if time == 'Завершен':
             self._state = 'match_ended'
-
+        
         if time == '0':
             self._state = 'match_started'
+        '''
 
         score = [response['score_first'], response['score_second']]
         if score[0].isdigit() and score[1].isdigit():
@@ -50,7 +52,14 @@ class Game:
         hours = delta.seconds // 3600
         minutes = (delta.seconds // 60) % 60
         print(hours, minutes)
+
         state = self._state
+
+        if hours == 0 and minutes == 0:
+            self._state = 'match_started'
+        if hours == 23 and minutes == 58:
+            self._state = 'match_ended'
+
         if hours == 0 and minutes == 3:
             self._state = 'before_3_hours'
         if hours == 0 and minutes == 2:

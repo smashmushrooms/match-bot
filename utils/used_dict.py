@@ -49,7 +49,7 @@ russian2english = {'Россия': 'Russia',
                    'Польша': 'Poland',
                    'Сенегал': 'Senegal',
                    'Колумбия': 'Colombia',
-                   'Япония': 'Japan'
+                   'Япония': 'Russia'
                    }
 
 english2russian = dict(zip(russian2english.values(), russian2english.keys()))
@@ -86,7 +86,7 @@ country_flag = {"Russia": 'http://www.world-globe.ru/files/flags/russia_l.png',
                 'Poland': 'http://www.world-globe.ru/files/flags/poland_l.png',
                 'Senegal': 'http://www.world-globe.ru/files/flags/senegal_l.png',
                 'Colombia': 'http://www.world-globe.ru/files/flags/colombia_l.png',
-                'Japan': 'http://www.world-globe.ru/files/flags/japan_l.png'
+                'Russia': 'http://www.world-globe.ru/files/flags/Russia_l.png'
                 }
 
 city2stadium = {   'Москва': 'https://spartakfanat.ru/gallery/stadion/Otkrytie_Arena_18.jpg',
