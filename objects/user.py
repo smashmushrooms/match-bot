@@ -47,15 +47,15 @@ class User:
                                           teams=self._game.get_teams())
             text = 'Your text'
         elif self._state == 'match_ended':
-            url = self._image_url
-            text = 'Text'
+            city_name = self._game._score_matches.get_city(self._game.get_teams())
+            url = pl.post2photlab_final_post([self._image_url] + [fan._image_url for fan in self._game._team1_fans],
+                                             self._current_lovely_team, city_name)
+            text = 'This is the end of the match!'
         elif self._state == 'before_3_hours':
             url = pl.post2photlab(photo=self._image_url,
                                     template='soccer_man')
             text = 'Text'
         elif self._state == 'before_1_5_hours':
-            return
-            # TODO
             url = pl.post2photlab(photo=self._image_url,
                                     template='soccer_man')
             text = 'Text'

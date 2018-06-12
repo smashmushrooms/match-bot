@@ -1,6 +1,7 @@
 import requests
 import bs4
 import numpy as np
+import os
 from utils.used_dict import *
 
 
@@ -57,6 +58,46 @@ def post2photlab_versus(photos, teams):
              'image_url[3]': (None, url3),
              'image_url[4]': (None, url4),
              'template_name': (None, templates_names['versus'])}
+
+    response = requests.post(URL, files=files)
+
+    return response.text
+
+
+def post2photlab_final_post(photos, team, stadium):
+    """
+    Generate final photo with users
+    photos - list of urls of users as type str
+    team - name of country in English
+    
+    example:
+    11 urls of users
+    photos = ['http://kinodom.org/uploads/posts/2013-03/1364165379_1691665...; for i in range(11)]
+    print(post2photlab_final_post(photos, 'Russia', 'Москва'))
+    """
+    if not isinstance(photos, list):
+        print('photos must be list')
+        return ''
+
+    if len(photos) != 11:
+        print('len photos must be equal 11')
+        return ''
+
+    if team not in country_flag:
+        print('unknown country ' + team)
+        return ''
+
+    urls = []
+    for i in range(11):
+        urls.append(photos[i])
+    urls.append(country_flag[team])
+    urls.append(city2stadium[stadium])
+
+    files = {}
+    for i in range(13):
+        files['image_url['+str(i+1)+']'] = (None, urls[i])
+
+    files['template_name'] = (None, templates_names['final_post'])
 
     response = requests.post(URL, files=files)
 
@@ -142,21 +183,30 @@ def generate_city_photo(city):
     city = 'красивые места ' + city
     search_city = "https://yandex.ru/images/search?text=" + city
 
-    s = requests.get(search_city)
-    b = bs4.BeautifulSoup(s.text, "html.parser")
-    count = 0
-    good_url = []
-    for match in b.select('.serp-item__link'):
-        url = match.get('href').split('=')[2]
-        url = url.replace('%3A', ':').replace('%2F', '/').split('&')[0]
-        if url[-4:] == '.jpg':
-            count += 1
-            good_url.append(url)
-        if count == 10:
-            break
+    while True:
+        s = requests.get(search_city)
+        b = bs4.BeautifulSoup(s.text, "html.parser")
+        count = 0
+        good_url = []
+        try:
+            for match in b.select('.serp-item__link'):
+                url = match.get('href').split('=')[2]
+                url = url.replace('%3A', ':').replace('%2F', '/').split('&')[0]
+                if url[-4:] == '.jpg':
+                    count += 1
+                    good_url.append(url)
+                if count == 10:
+                    break
 
-    url = np.random.choice(good_url, 1)[0]
-    template = 'nature_' + str(np.random.choice(range(1, 7)))
+            if not good_url:
+                os.system('sleep 1')
+                print(s.url)
+
+            url = np.random.choice(good_url, 1)[0]
+            template = 'nature_' + str(np.random.choice(range(1, 7)))
+            break
+        except Exception:
+            pass
 
     new_url = post2photlab(url, template)
 

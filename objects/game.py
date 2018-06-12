@@ -57,13 +57,13 @@ class Game:
 
         if hours == 0 and minutes == 0:
             self._state = 'match_started'
-        if hours == 23 and minutes == 58:
+        if hours == 23 and minutes == 56:
             self._state = 'match_ended'
 
         if hours == 0 and minutes == 3:
             self._state = 'before_3_hours'
         if hours == 0 and minutes == 2:
-            self._state = 'before_1_5_hour'
+            self._state = 'before_1_5_hours'
         if hours == 0 and minutes == 1:
             self._state = 'before_1_hour'
         if state != self._state:
