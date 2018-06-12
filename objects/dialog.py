@@ -7,8 +7,11 @@ ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvL
 VERIFY_TOKEN = 'ourbadpass123'
 bot = Bot(ACCESS_TOKEN)
 
-class Dialog(object):
 
+def get_random_object(objects):
+    return random.choice(objects, 1)[0]
+
+class Dialog(object):
     _game_observer = None
 
     actions = {
@@ -20,8 +23,7 @@ class Dialog(object):
         'scenario': 'self.scenario'
     }
 
-    def get_random_message(self, messages):
-        return random.choice(messages, 1)[0]
+
 
     def __init__(self, id):
         self._state = 'nil'
@@ -49,7 +51,7 @@ class Dialog(object):
             'Please, send your selfie'
         ]
 
-        message_parts = [self.get_random_message(part_variations)
+        message_parts = [get_random_object(part_variations)
                          for part_variations in
                          [greetings, self_intros, photo_requests]]
 
@@ -74,7 +76,7 @@ class Dialog(object):
             'What match do you prefer today?'
         ]
 
-        self.send_buttons(buttons, self.get_random_message(choose_match_requests))
+        self.send_buttons(buttons, get_random_object(choose_match_requests))
         self._state = "choose_side"
 
     def choose_side(self, text):
@@ -85,7 +87,7 @@ class Dialog(object):
             'Who would win?'
         ]
         self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
-                              self.get_random_message(side_requests))
+                              get_random_object(side_requests))
         self._state = 'start_scenario'
 
     def start_scenario(self, text):
