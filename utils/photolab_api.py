@@ -1,10 +1,10 @@
 import requests
 import bs4
-from used_dict import templates_names, country_flag, URL
+import numpy as np
+from used_dict import *
 
 
 def post2photlab_versus(photos, teams):
-    print('asd')
     """
         Generate versus photo
         photos - list of url as type str
@@ -63,6 +63,48 @@ def post2photlab_versus(photos, teams):
     return response.text
 
 
+def post2photlab_stadium(photo, country, city):
+    """
+        Generate photo by template
+        photos - url - str
+        country - name of country in english - str
+        city - name of city in russian (use get_city from score_matches)
+        example:
+            url = 'http://www.wallpapersin4k.org/wp-content/uploads/2016/12/Man-Wallpapers-3.jpg'
+            country = 'England'
+            city = 'Москва'
+            print(post2photlab_stadium(url, country , city))
+    """
+    if not isinstance(photo, str):
+        print('photos must be str')
+        return ''
+
+    if not isinstance(country, str):
+        print('country must be str')
+        return ''
+
+    if not isinstance(city, str):
+        print('stadium must be str')
+        return ''
+
+    if country not in country_flag:
+        print('unknown name of country')
+        return ''
+
+    if city not in city2stadium:
+        print('unknown name of city')
+        return ''
+
+    files = {'image_url[1]': (None, photo),
+             'image_url[2]': (None, country_flag[country]),
+             'image_url[3]': (None, city2stadium[city]),
+             'template_name': (None, templates_names['stadium'])}
+
+    response = requests.post(URL, files=files)
+
+    return response.text
+
+
 def post2photlab(photo, template):
     """
         Generate photo by template
@@ -92,9 +134,9 @@ def post2photlab(photo, template):
     return response.text
 
 
-def generate_ten_city_photo(city):
+def generate_city_photo(city):
     """
-        Returns 10 photo of city from yandex.
+        Return url photo of city from yandex and url after photolab.
         city - str
     """
     city = 'красивые места ' + city
@@ -112,4 +154,10 @@ def generate_ten_city_photo(city):
             good_url.append(url)
         if count == 10:
             break
-    return good_url
+
+    url = np.random.choice(good_url)
+    template = 'nature_' + str(np.random.choice(range(1,7)))
+
+    new_url = post2photlab(url, template)
+
+    return url, new_url
