@@ -1,9 +1,9 @@
 from objects.game import Game
 from objects.user import User
 from utils.score_matches import Score_Matches
-from datetime import datetime, time
+from datetime import datetime, timedelta
 
-class GameObserver:
+class GameObserver(object):
     _games = []
     _teams = [[]]
 
@@ -16,7 +16,7 @@ class GameObserver:
         self._teams = self._score.get_matches_names()
         for team in self._teams:
             match_time = self._score.get_score(team)['time'].split('-')
-            game = Game(team, datetime(2018, 6, 12, 10, 49))
+            game = Game(team, datetime.now() + timedelta(0, 240, 0))
             self._games.append(game)
 
     def update_state(self):
@@ -32,7 +32,7 @@ class GameObserver:
 
     def add_fan(self, user):
         for game in self._games:
-            if user.get_current_lovely_team() in game.get_teams():
+            if user.current_lovely_team in game.get_teams():
                 game.add_fan(user)
                 return
 

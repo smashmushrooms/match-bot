@@ -1,7 +1,7 @@
 URL = 'http://api-hack.photolab.me/template_process.php'
 
 templates_names = {
-    'versus': '10B527DA-8896-8304-018D-2C24F5492476',
+    'versus': 'C8241960-CAE7-E464-C9FD-8553020A9DBA',
     'soccer_man': '4283E3C4-BE89-42A4-D9B5-B775A66F146F',
     'stadium': '3FF25B8B-A36D-9524-CD86-EF1C5BA3156E',
     'nature_1': '66FEB7C9-DAE5-7AA4-7560-08B36FD8B385',

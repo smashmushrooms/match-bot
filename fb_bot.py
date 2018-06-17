@@ -2,75 +2,95 @@ import requests
 
 from threading import Thread
 from time import sleep
-from flask import Flask, request
+from japronto import Application
+from functools import wraps
+from sys import stderr
 
 from objects import GameObserver
 from objects import User
+from re import sub
 
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHl' \
                'X7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
-app = Flask(__name__)
 game_observer = GameObserver()
 users = {}
 
 User._game_observer = game_observer
 
+
+def response_text_decorator(func):
+    @wraps(func)
+    def wrapper(request):
+        return request.Response(text=func(request))
+    return wrapper
+
+
 # We will receive messages that Facebook sends our bot at this endpoint
-@app.route("/", methods=['GET', 'POST'])
-def receive_message():
+#@app.route("/", methods=['GET', 'POST'])
+@response_text_decorator
+def receive_message(request):
     if request.method == 'GET':
         """Before allowing people to message your bot, Facebook has implemented a verify token
         that confirms all requests that your bot receives came from Facebook."""
-        token_sent = request.args.get("hub.verify_token")
-        return verify_fb_token(token_sent)
+        for attr in dir(request):
+            if not attr.startswith('__'):
+                try:
+                    print(attr, getattr(request, attr))
+                except Exception:
+                    print(attr, file=stderr)
+        token_sent = request.query.get("hub.verify_token")
+        return verify_fb_token(request, token_sent)
     else:
-        output = request.get_json()
+        body_str = request.body.decode()
+        body_str = sub('true', 'True', body_str)
+        body_str = sub('false', 'False', body_str)
+        body_str = sub('null', 'None', body_str)
+        output = eval(body_str)
         print(output)
         for event in output['entry']:
             if 'messaging' in event:
                 messaging = event['messaging']
-                for x in messaging:
-                    if 'message' not in x:
-                        if 'postback' in x and 'payload' in x['postback']:
-                            if x['postback']['payload'] == 'Begin':
-                                recipient_id = x['sender']['id']
-                                if recipient_id not in users:
-                                    user = User(recipient_id)
-                                    users[recipient_id] = user
-                                users[recipient_id].dialog_update()
-                    else:
-                        if x.get('message'):
-                            recipient_id = x['sender']['id']
-                            if recipient_id not in users:
-                                return "Message Processed"
-                            if x['message'].get('text'):
-                                message = x['message']['text']
-                                users[recipient_id].dialog_update(message = message)
-                            if x['message'].get('attachments'):
-                                if x['message']['attachments'][0]['type'] == 'image':
-                                    url = x['message']['attachments'][0]['payload']['url']
-                                    print("out")
-                                    users[recipient_id].set_image_url(url)
-                                    users[recipient_id].dialog_update()
-                                    print("in")
-                                    print(users[recipient_id].get_dialog().get_state())
-                                    return "Message Processed"
+                for message in messaging:
+                    if 'message' not in message:
+                        if 'postback' in message and 'payload' in message['postback']:
+                            if message['postback']['payload'] == 'Begin':
+                                sender_id = message['sender']['id']
+                                if sender_id not in users:
+                                    user = User(sender_id)
+                                    users[sender_id] = user
+                                    users[sender_id].dialog_update()
                                 else:
-                                    users[recipient_id].send_message('Send your photo please :)')
-
+                                    raise ValueError('Attempt to begin interaction twice')
+                    else:
+                        if message.get('message'):
+                            sender_id = message['sender']['id']
+                            if sender_id not in users:
+                                user = User(sender_id)
+                                users[sender_id] = user
+                                users[sender_id].dialog_update()
+                                raise ValueError('Invalid user id: user was not registred')
+                            if message['message'].get('text'):
+                                text = message['message']['text']
+                                users[sender_id].dialog_update(text=text)
+                            if message['message'].get('attachments'):
+                                if message['message']['attachments'][0]['type'] == 'image':
+                                    url = message['message']['attachments'][0]['payload']['url']
+                                    users[sender_id].dialog_update(url)
+                                else:
+                                    users[sender_id].dialog_update()
             elif 'standby' in event:
                 for standby in event['standby']:
-                    recipient_id = standby['sender']['id']
+                    sender_id = standby['sender']['id']
                     if 'postback' in standby and 'title' in standby['postback']:
-                        users[recipient_id].dialog_update(message = standby['postback']['title'])
+                        users[sender_id].dialog_update(text=standby['postback']['title'])
 
-    return "Message Processed"
 
-def verify_fb_token(token_sent):
+def verify_fb_token(request, token_sent):
     if token_sent == VERIFY_TOKEN:
-        return request.args.get("hub.challenge")
+        return request.query.get("hub.challenge")
     return 'Invalid verification token'
+
 
 def configure_bot():
     addr = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token=" + ACCESS_TOKEN
@@ -84,7 +104,7 @@ def configure_bot():
     resp = requests.post(addr, json=response)
 
 
-class ObsereverThread(Thread):
+class ObserverThread(Thread):
     def __init__(self):
         Thread.__init__(self)
 
@@ -97,6 +117,7 @@ class ObsereverThread(Thread):
 if __name__ == "__main__":
     configure_bot()
 
+    '''
     default_user1 = User(-1)
     default_user1._image_url = 'http://www.pxleyes.com/images/contests/dragan-effect/fullsize/egyptian-man-4deda4dc71f2f_hires.jpg'
     default_user1._current_lovely_team = 'Egypt'
@@ -152,7 +173,7 @@ if __name__ == "__main__":
     game_observer.add_fan(default_user9)
 
     default_user10 = User(-10)
-    default_user10._image_url = 'https://img.getbg.net/upload/full/8/80680_dzherard_2560x1600_(www.GetBg.net).jpg'
+    default_user10._image_url = 'https://brjunetka.ru/wp-content/uploads/2014/12/Ulyibaytes.jpg'
     default_user10._current_lovely_team = 'Russia'
     default_user10._state = None   
     game_observer.add_fan(default_user10)
@@ -162,10 +183,13 @@ if __name__ == "__main__":
     default_user11._current_lovely_team = 'Russia'
     default_user11._state = None  
     game_observer.add_fan(default_user11)       
+    '''
 
-    observer_thread = ObsereverThread()
+    observer_thread = ObserverThread()
     observer_thread.start()
 
-    app.run(threaded=False)
+    app = Application()
+    app.router.add_route('/', receive_message, methods=['GET', 'POST'])
+    app.run(host='127.0.0.1', port=5000, worker_num=1)
 
     observer_thread.join()

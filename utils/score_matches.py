@@ -5,7 +5,7 @@ from datetime import datetime
 from utils.used_dict import *
 
 
-class Score_Matches:
+class Score_Matches(object):
     """
         example:
             score = Score_Matches('Чемпионат Мира' , '2018-6-19')

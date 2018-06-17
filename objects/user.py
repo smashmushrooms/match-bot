@@ -1,26 +1,172 @@
 import json
 import os
 import utils.photolab_api as pl
-from objects.dialog import Dialog
 from threading import Condition
-from objects.dialog import get_random_object
 from utils.used_dict import templates_names
+from pymessenger import Button
+from pymessenger.bot import Bot
+from numpy import random
 
-class User:
+
+def get_random_object(objects):
+    return random.choice(objects, 1)[0]
+
+ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHl' \
+               'X7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
+VERIFY_TOKEN = 'ourbadpass123'
+bot = Bot(ACCESS_TOKEN)
+
+
+class Dialog(object):
     _game_observer = None
 
-    def __init__(self, id, scenario_path='scenario/base_scenario.json'):
+    class State(object):
+        prev_to_next = {
+            'start': 'get_selfie',
+            'get_selfie': 'get_match',
+            'get_match': 'get_team',
+            'get_team': 'game_info',
+            'game_info': 'city_info',
+            'city_info': 'warming',
+            'warming': 'start_game',
+            'start_game': 'game_in_process',
+            'game_in_process': 'end_game',
+            'end_game': 'get_match'
+        }
+
+        def __eq__(self, other):
+            return self._state == other
+
+        def __init__(self):
+            self._state = 'start'
+
+        def turn_next(self):
+            self._state = self.prev_to_next[self._state]
+
+    def __init__(self, id):
+        self._state = Dialog.State()
         self._id = id
-        self._current_lovely_team = ''
+
+    def request_selfie(self):
+        greetings = [
+            'Hi',
+            'Hello',
+            'Hi there'
+        ]
+        self_intros = [
+            'my name is MatchBot',
+            'I am MatchBot'
+        ]
+        photo_requests = [
+            'I need your photo, take a selfie, please',
+            'I need your selfie, send it to me, please',
+            'Please, send your selfie'
+        ]
+
+        message_parts = [get_random_object(part_variations)
+                         for part_variations in
+                         [greetings, self_intros, photo_requests]]
+
+        message = '{}, {}!\n{}'.format(
+            *message_parts
+        )
+
+        bot.send_text_message(self._id, message)
+
+    def request_selfie_again(self):
+        bot.send_text_message(self._id, 'Send your photo, please :)')
+
+    def choose_match(self, games):
+        buttons = []
+        for teams in games:
+            buttons.append([teams[0] + ' - ' + teams[1], 'postback'])
+
+        match_requests = [
+            'Choose your favorite match today',
+            'What is the match you wanna observe?',
+            'What is the match you wanna track?',
+            'What match do you prefer today?'
+        ]
+
+        self.send_buttons(buttons, get_random_object(match_requests))
+
+    def choose_side(self, teams):
+        side_requests = [
+            'Choose your side',
+            'Who do you support?',
+            'Who would win?'
+        ]
+
+        self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
+                              get_random_object(side_requests))
+
+    def start_tracking(self):
+        bot.send_text_message(self._id, 'Thank you! Wait for updates')
+
+    def send_city_info(self, image_url, team_flag_url, stadium_photo_url):
+        url = pl.post2photlab_stadium(image_url, team_flag_url, stadium_photo_url)
+        text = 'The game will take place in the Krestovsky stadium. Move all the stuff around and ' \
+                   'do not miss one of the main football events of the next 4 years! MatchBot will ' \
+                   'keep you informed! In touch :)'
+
+        self.send_message(text)
+        self.send_image_url(url)
+
+    def send_message(self, response):
+        bot.send_text_message(self._id, response)
+        return "success"
+
+    def send_buttons(self, inbuttons, action_description):
+        buttons = []
+        for inbtn in inbuttons:
+            button = Button(title=inbtn[0], type=inbtn[1], payload='other')
+            buttons.append(button)
+        bot.send_button_message(self._id, action_description, buttons)
+        return "success"
+
+    def send_photo(self, photo_path):
+        result = bot.send_image(self._id, photo_path)
+        return result
+
+    def quick_reply_send(self, buttons, text):
+        quick_replies = self.create_quick_reply(buttons)
+        message = {
+            "text": text,
+            "quick_replies": quick_replies
+        }
+        bot.send_message(self._id, message)
+
+    def create_quick_reply(self, buttons):
+        quick_replies = []
+        for btn in buttons:
+            quick_reply = {
+                "content_type": "text",
+                "title": btn[0],
+                "payload": btn[1]
+            }
+            if btn[2] != '':
+                quick_reply['image_url'] = btn[2]
+
+            quick_replies.append(quick_reply)
+        return quick_replies
+
+    def set_game_observer(self, observer):
+        self._game_observer = observer
+
+    def send_image_url(self, url):
+        bot.send_image_url(self._id, url)
+
+
+class User(Dialog):
+    def __init__(self, id):
+        super().__init__(id)
+        self.current_lovely_team = ''
         self._image_url = ''
-        self._state = 'ended'
         self._scenario = {}
-        self.set_scenario(scenario_path)
         self._game = None
-        self._dialog = Dialog(id)
-        self._dialog.set_game_observer(self._game_observer)
 
     def change_state(self, state):
+        raise NotImplementedError
         if self._state == state:
             return
         self._state = state
@@ -44,7 +190,7 @@ class User:
                 opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
                 print (self._game._team1_fans)
                 url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
-                                          teams=self._game.get_teams())
+                                             teams=self._game.get_teams())
         elif self._state == 'match_ended':
             city_name = self._game._score_matches.get_city(self._game.get_teams())
             print(self._game._team1_fans)
@@ -69,14 +215,7 @@ class User:
             url = pl.post2photlab(photo=self._image_url, template='soccer_man')
             text = 'Text'
         elif self._state == 'idle':
-            url = pl.post2photlab_stadium(self._image_url, self._current_lovely_team,
-                    self._game._score_matches.get_city(self._game.get_teams()))
-            text = 'The game will take place in the Krestovsky stadium. Move all the stuff around and ' \
-                   'do not miss one of the main football events of the next 4 years! MatchBot will ' \
-                   'keep you informed! In touch :)'
-
-        self._dialog.send_message(text)
-        self._dialog.send_image_url(url)
+            pass
 
     def score_changed(self, delta):
         if delta:
@@ -84,47 +223,64 @@ class User:
         else:
             miss_cb()
 
-    def set_scenario(self, scenario_path):
-        with open(scenario_path) as f:
-            self._scenario = json.load(f)
+    def dialog_update(self, text=None):
+        curr_dialog_state = self._state
 
-    def set_lovely_team(self, team):
-        self._current_lovely_team = team
+        if curr_dialog_state == 'start':
+            self.request_selfie()
+            curr_dialog_state.turn_next()
 
-    def set_image_url(self, url):
-        self._image_url = url
+        elif curr_dialog_state == 'get_selfie':
+            if not text:
+                self.request_selfie_again()
+                return
+            self._image_url = text
 
-    def set_state(self, state):
-        self._state = state
+            curr_dialog_state.turn_next()
 
-    def get_name(self):
-        return self._name
+            games = self._game_observer.get_teams()
+            self.choose_match(games)
 
-    def get_current_lovely_team(self):
-        return self._current_lovely_team
+        elif curr_dialog_state == 'get_match':
+            games = self._game_observer.get_teams()
+            if text not in games:
+                self.choose_match(games)
 
-    def get_image_url(self):
-        return self._image_url
+            teams = text.split(' - ')
+            self.teams_ = teams
 
-    def get_state(self):
-        return self._state
+            curr_dialog_state.turn_next()
 
-    def get_id(self):
-        return self._id
+            self.choose_side(teams)
 
-    def set_game(self, game):
-        self._game = game
+        elif curr_dialog_state == 'get_team':
+            if text not in self.teams_:
+                self.choose_side(self.teams_)
 
-    def dialog_update(self, message=''):
-        if self._dialog.get_state() == 'start_scenario':
-            if message:
-                self.set_lovely_team(message)
+            del self.teams_
+            self.current_lovely_team = text
             self._game_observer.add_fan(self)
-            self.change_state('idle')
-        self._dialog.dialog_update(message)
+            curr_dialog_state.turn_next()
+            self.dialog_update()
 
-    def send_message(self, message):
-        self._dialog.send_message(message)
+        elif curr_dialog_state == 'game_info':
+            stadium_photo_url = self._game._score_matches.get_city(self._game.get_teams())
+            self.send_city_info(self._image_url, self.current_lovely_team, stadium_photo_url)
+            curr_dialog_state.turn_next()
 
-    def get_dialog(self):
-        return self._dialog
+        elif curr_dialog_state == 'city_info':
+            curr_dialog_state.turn_next()
+
+        elif curr_dialog_state == 'warming':
+            curr_dialog_state.turn_next()
+
+        elif curr_dialog_state == 'start_game':
+            curr_dialog_state.turn_next()
+
+        elif curr_dialog_state == 'game_in_progress':
+            curr_dialog_state.turn_next()
+
+        elif curr_dialog_state == 'end_game':
+            curr_dialog_state.turn_next()
+        else:
+            raise ValueError('Undefined state')
