@@ -51,39 +51,45 @@ def receive_message(request):
         for event in output['entry']:
             if 'messaging' in event:
                 messaging = event['messaging']
-                for message in messaging:
-                    if 'message' not in message:
-                        if 'postback' in message and 'payload' in message['postback']:
-                            if message['postback']['payload'] == 'Begin':
-                                sender_id = message['sender']['id']
+                for json in messaging:
+                    if 'message' not in json:
+                        if 'postback' in json and 'payload' in json['postback']:
+                            if json['postback']['payload'] == 'Begin':
+                                sender_id = json['sender']['id']
                                 if sender_id not in users:
                                     user = User(sender_id)
                                     users[sender_id] = user
                                     users[sender_id].dialog_update()
                                 else:
-                                    raise ValueError('Attempt to begin interaction twice')
+                                    print('Attempt to begin interaction twice', file=stderr)
                     else:
-                        if message.get('message'):
-                            sender_id = message['sender']['id']
+                        if json.get('message'):
+                            sender_id = json['sender']['id']
+                            if json['message'].get('is_echo'):
+                                print('Got echo', file=stderr)
+                                return 'Message Processed'
                             if sender_id not in users:
-                                user = User(sender_id)
-                                users[sender_id] = user
-                                users[sender_id].dialog_update()
-                                raise ValueError('Invalid user id: user was not registred')
-                            if message['message'].get('text'):
-                                text = message['message']['text']
-                                users[sender_id].dialog_update(text=text)
-                            if message['message'].get('attachments'):
-                                if message['message']['attachments'][0]['type'] == 'image':
-                                    url = message['message']['attachments'][0]['payload']['url']
-                                    users[sender_id].dialog_update(url)
+                                print('Invalid user id: user was not registred', file=stderr)
+                                return 'Message Processed'
+
+                            if json['message'].get('attachments'):
+                                if json['message']['attachments'][0]['type'] == 'image':
+                                    url = json['message']['attachments'][0]['payload']['url']
+                                    users[sender_id].dialog_update(url, tag='image')
                                 else:
                                     users[sender_id].dialog_update()
+                                return 'Message Processed'
+
+                            if json['message'].get('text'):
+                                text = json['message']['text']
+                                users[sender_id].dialog_update(text)
             elif 'standby' in event:
                 for standby in event['standby']:
                     sender_id = standby['sender']['id']
-                    if 'postback' in standby and 'title' in standby['postback']:
-                        users[sender_id].dialog_update(text=standby['postback']['title'])
+                    if 'postback' in standby and 'title' in standby['postback']\
+                            and standby['postback']['title'] != 'Начать':
+                        users[sender_id].dialog_update(standby['postback']['title'])
+            return 'Message Processed'
 
 
 def verify_fb_token(request, token_sent):

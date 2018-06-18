@@ -73,11 +73,11 @@ class Game:
         return self._state == 'ended'
 
     def add_fan(self, user):
-        if user.get_current_lovely_team() == self._teams[0]:
+        if user.current_lovely_team == self._teams[0]:
             self._team1_fans.append(user)
         else:
             self._team2_fans.append(user)
-        user.set_game(self)
+        user.game = self
 
     def get_teams(self):
         return self._teams

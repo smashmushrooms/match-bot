@@ -6,6 +6,7 @@ from utils.used_dict import templates_names
 from pymessenger import Button
 from pymessenger.bot import Bot
 from numpy import random
+from sys import stderr
 
 
 def get_random_object(objects):
@@ -161,9 +162,9 @@ class User(Dialog):
     def __init__(self, id):
         super().__init__(id)
         self.current_lovely_team = ''
+        self.game = None
         self._image_url = ''
         self._scenario = {}
-        self._game = None
 
     def change_state(self, state):
         raise NotImplementedError
@@ -215,7 +216,7 @@ class User(Dialog):
             url = pl.post2photlab(photo=self._image_url, template='soccer_man')
             text = 'Text'
         elif self._state == 'idle':
-            pass
+            passaw
 
     def score_changed(self, delta):
         if delta:
@@ -223,15 +224,18 @@ class User(Dialog):
         else:
             miss_cb()
 
-    def dialog_update(self, text=None):
+    def dialog_update(self, text=None, tag=None):
+        print('Dialog is updating', file=stderr)
         curr_dialog_state = self._state
+        print(curr_dialog_state._state, file=stderr)
 
         if curr_dialog_state == 'start':
             self.request_selfie()
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'get_selfie':
-            if not text:
+            if not text or tag != 'image':
+                self.send_message(text)
                 self.request_selfie_again()
                 return
             self._image_url = text
@@ -244,6 +248,8 @@ class User(Dialog):
         elif curr_dialog_state == 'get_match':
             games = self._game_observer.get_teams()
             if text not in games:
+                self.send_message(text)
+                self.send_message(' '.join(games))
                 self.choose_match(games)
 
             teams = text.split(' - ')
@@ -256,6 +262,7 @@ class User(Dialog):
         elif curr_dialog_state == 'get_team':
             if text not in self.teams_:
                 self.choose_side(self.teams_)
+                return
 
             del self.teams_
             self.current_lovely_team = text
@@ -264,7 +271,7 @@ class User(Dialog):
             self.dialog_update()
 
         elif curr_dialog_state == 'game_info':
-            stadium_photo_url = self._game._score_matches.get_city(self._game.get_teams())
+            stadium_photo_url = self.game._score_matches.get_city(self.game.get_teams())
             self.send_city_info(self._image_url, self.current_lovely_team, stadium_photo_url)
             curr_dialog_state.turn_next()
 
