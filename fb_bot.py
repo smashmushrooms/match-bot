@@ -10,8 +10,7 @@ from objects import GameObserver
 from objects import User
 from re import sub
 
-ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHl' \
-               'X7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
+ACCESS_TOKEN = 'EAAEtr6bH9LEBAGN7gD71oKx5JZCd8YBptxLpq40z41zf0nkSrGZAyA2Fzymzx0ZCPQnxVnypV88MphQtzlEmkY91O4jo58ZBc5PTm2NsfH8ZAgDgXDwWas1I6dq8foa3Unro2BTDZAtGXywgkpTAT6LzBdZCPPkYZBPIKqr2jKd46AZDZD'
 VERIFY_TOKEN = 'ourbadpass123'
 game_observer = GameObserver()
 users = {}
@@ -23,11 +22,12 @@ def response_text_decorator(func):
     @wraps(func)
     def wrapper(request):
         return request.Response(text=func(request))
+
     return wrapper
 
 
 # We will receive messages that Facebook sends our bot at this endpoint
-#@app.route("/", methods=['GET', 'POST'])
+# @app.route("/", methods=['GET', 'POST'])
 @response_text_decorator
 def receive_message(request):
     if request.method == 'GET':
@@ -54,14 +54,17 @@ def receive_message(request):
                 for json in messaging:
                     if 'message' not in json:
                         if 'postback' in json and 'payload' in json['postback']:
-                            if json['postback']['payload'] == 'Begin':
-                                sender_id = json['sender']['id']
+                            payload = json['postback']['payload']
+                            sender_id = json['sender']['id']
+                            if payload == 'Get started' or payload == 'first_state':
                                 if sender_id not in users:
                                     user = User(sender_id)
                                     users[sender_id] = user
                                     users[sender_id].dialog_update()
                                 else:
                                     print('Attempt to begin interaction twice', file=stderr)
+                            elif payload == 'update_selfie':
+                                pass
                     else:
                         if json.get('message'):
                             sender_id = json['sender']['id']
@@ -86,7 +89,7 @@ def receive_message(request):
             elif 'standby' in event:
                 for standby in event['standby']:
                     sender_id = standby['sender']['id']
-                    if 'postback' in standby and 'title' in standby['postback']\
+                    if 'postback' in standby and 'title' in standby['postback'] \
                             and standby['postback']['title'] != 'Начать':
                         users[sender_id].dialog_update(standby['postback']['title'])
             return 'Message Processed'
@@ -99,15 +102,46 @@ def verify_fb_token(request, token_sent):
 
 
 def configure_bot():
-    addr = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token=" + ACCESS_TOKEN
+    addr = "https://graph.facebook.com/v2.6/me/threadsettings?accesstoken=" + ACCESS_TOKEN
     response = {
-        "get_started": {"payload": "Begin"},
-        "greeting": [{
-            "locale": "default",
-            "text": "FIX ME"
-        }]
+        "setting_type": "call_to_actions",
+        "thread_state": "new_thread",
+        "call_to_actions": [
+            {
+                "payload": "USER_DEFINED_PAYLOAD"
+            }
+        ]
     }
     resp = requests.post(addr, json=response)
+    print(resp)
+
+    response = {
+        "setting_type": "greeting",
+        "greeting": {
+            "text": "Hi {{user_first_name}}, welcome to The Debuggers"
+        }
+    }
+    resp = requests.post(addr, json=response)
+    print(resp)
+
+    response = {
+        "setting_type": "call_to_actions",
+        "thread_state": "existing_thread",
+        "call_to_actions": [
+            {
+                "type": "postback",
+                "title": "Set up Start state",
+                "payload": "Set up Start state"
+            },
+            {
+                "type": "postback",
+                "title": "Change Selfie",
+                "payload": "Change Selfie"
+            }
+        ]
+    }
+    resp = requests.post(addr, json=response)
+    print(resp)
 
 
 class ObserverThread(Thread):
@@ -116,12 +150,12 @@ class ObserverThread(Thread):
 
     def run(self):
         while True:
-            sleep(5)
+            sleep(20)
             game_observer.update_state()
 
 
 if __name__ == "__main__":
-    configure_bot()
+    # configure_bot()
 
     '''
     default_user1 = User(-1)
@@ -196,6 +230,6 @@ if __name__ == "__main__":
 
     app = Application()
     app.router.add_route('/', receive_message, methods=['GET', 'POST'])
-    app.run(host='127.0.0.1', port=5000, worker_num=1)
+    app.run(host='0.0.0.0', port=8080, worker_num=1)
 
     observer_thread.join()

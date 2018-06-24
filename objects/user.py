@@ -12,6 +12,7 @@ from sys import stderr
 def get_random_object(objects):
     return random.choice(objects, 1)[0]
 
+
 ACCESS_TOKEN = 'EAAEtr6bH9LEBAKXpBq732AhmrdwLV3EJynZCYFLnqRahVqOHEtZCWjD3IoKdOvLepZAmZAcPKlpEBlM16WB6WTroZCRkZAadHHl' \
                'X7tcYdApMZBLg8YQAQyp0JXKEJ031NG0ud5ztpAZAL1Dy6ZAAn3Rb6l80jMJEyiUbZC6PqrdZAGTLRmgZCMOh4NSLfV1FzEw7GDAZD'
 VERIFY_TOKEN = 'ourbadpass123'
@@ -42,7 +43,11 @@ class Dialog(object):
             self._state = 'start'
 
         def turn_next(self):
+
             self._state = self.prev_to_next[self._state]
+
+        def set_state(self, state):
+            self._state = state
 
     def __init__(self, id):
         self._state = Dialog.State()
@@ -106,9 +111,7 @@ class Dialog(object):
 
     def send_city_info(self, image_url, team_flag_url, stadium_photo_url):
         url = pl.post2photlab_stadium(image_url, team_flag_url, stadium_photo_url)
-        text = 'The game will take place in the Krestovsky stadium. Move all the stuff around and ' \
-                   'do not miss one of the main football events of the next 4 years! MatchBot will ' \
-                   'keep you informed! In touch :)'
+        text = self.game.generate_info_about_game()
 
         self.send_message(text)
         self.send_image_url(url)
@@ -157,6 +160,9 @@ class Dialog(object):
     def send_image_url(self, url):
         bot.send_image_url(self._id, url)
 
+    def set_state(self, state):
+        self._state.set_state(state)
+
 
 class User(Dialog):
     def __init__(self, id):
@@ -179,50 +185,19 @@ class User(Dialog):
             except AttributeError:
                 pass
 
-        if self._state == 'match_started':
-            text = 'Today\'s match will be watched by millions of people around the world. ' \
-                   'Here goes your personal opponent from the opposite side... Let the battle begin!'
-            if self._current_lovely_team == self._game.get_teams()[0]:
-                print (self._game._team2_fans)
-                opponent_photo_url = get_random_object(self._game._team2_fans).get_image_url()
-                url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
-                                          teams=self._game.get_teams())
-            else:
-                opponent_photo_url = get_random_object(self._game._team1_fans).get_image_url()
-                print (self._game._team1_fans)
-                url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
-                                             teams=self._game.get_teams())
-        elif self._state == 'match_ended':
-            city_name = self._game._score_matches.get_city(self._game.get_teams())
-            print(self._game._team1_fans)
-            url = pl.post2photlab_final_post([fan._image_url for fan in self._game._team1_fans],
-                                             self._current_lovely_team, city_name)
-            text = 'This is the end of the match! Well done, fans!'
-        elif self._state == 'before_3_hours':
-            text = 'Saint Petersburg is a beautiful city, surprising with its atmosphere and architecture. ' \
-                   'Of course all it\'s magnificence can not be fitted in one photo... But we have imposed cool ' \
-                   'filters from the application PhotoLab ;)'
-            url, fixed_url = pl.generate_city_photo(self._game._score_matches.get_city(self._game.get_teams()))
-            self._dialog.send_message(text)
-            self._dialog.send_image_url(url)
-            self._dialog.send_image_url(fixed_url)
-            return
-        elif self._state == 'before_1_5_hours':
-            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
-            text = 'Only a couple of hours left until the match! All warm up!'
-        elif self._state == 'before_1_hour':
-            return
-            # TODO
-            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
-            text = 'Text'
-        elif self._state == 'idle':
-            passaw
-
     def score_changed(self, delta):
         if delta:
-            goal_cb()
+            self.goal_state()
         else:
-            miss_cb()
+            self.miss_state()
+
+    def goal_state(self):
+        pass
+        # TODO
+
+    def miss_state(self):
+        pass
+        # TODO
 
     def dialog_update(self, text=None, tag=None):
         print('Dialog is updating', file=stderr)
@@ -247,12 +222,11 @@ class User(Dialog):
 
         elif curr_dialog_state == 'get_match':
             games = self._game_observer.get_teams()
-            if text not in games:
-                self.send_message(text)
-                self.send_message(' '.join(games))
-                self.choose_match(games)
-
             teams = text.split(' - ')
+            if teams not in games:
+                self.choose_match(games)
+                return
+
             self.teams_ = teams
 
             curr_dialog_state.turn_next()
@@ -271,23 +245,57 @@ class User(Dialog):
             self.dialog_update()
 
         elif curr_dialog_state == 'game_info':
-            stadium_photo_url = self.game._score_matches.get_city(self.game.get_teams())
+            stadium_photo_url = self.game.get_city()
+
             self.send_city_info(self._image_url, self.current_lovely_team, stadium_photo_url)
+            self.start_tracking()
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'city_info':
+            city = self.game._score_matches.get_city(self.game.get_teams())
+            url, fixed_url = pl.generate_city_photo(city)
+
+            text = self.game.generate_info_about_city()
+
+            self.send_message(text)
+            self.send_image_url(url)
+            self.send_image_url(fixed_url)
+
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'warming':
+            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
+            text = 'Only a couple of hours left until the match! All warm up!'
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'start_game':
+            if self.current_lovely_team == self.game.get_teams()[0]:
+                print(self.game._team2_fans)
+                opponent_photo_url = get_random_object(self.game._team2_fans).get_image_url()
+                url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
+                                             teams=self.game.get_teams())
+            else:
+                opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
+                print(self.game._team1_fans)
+                url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
+                                             teams=self.game.get_teams())
+
+            text = 'Today\'s match will be watched by millions of people around the world. ' \
+                   'Here goes your personal opponent from the opposite side... Let the battle begin!'
+
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'game_in_progress':
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'end_game':
+            city_name = self.game._score_matches.get_city(self.game.get_teams())
+            print(self.game._team1_fans)
+            url = pl.post2photlab_final_post([fan._image_url for fan in self.game._team1_fans],
+                                             self.current_lovely_team, city_name)
+
+            text = 'This is the end of the match! Well done, fans!'
+
             curr_dialog_state.turn_next()
         else:
             raise ValueError('Undefined state')

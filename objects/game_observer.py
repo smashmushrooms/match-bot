@@ -15,17 +15,19 @@ class GameObserver(object):
     def _update_daily_games(self):
         self._teams = self._score.get_matches_names()
         for team in self._teams:
+            city = self._score.get_city(team)
             match_time = self._score.get_score(team)['time'].split('-')
-            game = Game(team, datetime.now() + timedelta(0, 240, 0))
+            game = Game(team, city, datetime.now() + timedelta(0, 240, 0))
             self._games.append(game)
 
     def update_state(self):
         now = datetime.now()
-        if (now.hour == 0 and now.minute == 0) or not len(self._games):
+        if (now.hour == 1 and now.minute == 0) or not len(self._games):
             self._update_daily_games()
         for game in self._games:
             game.update()
-        self._games = list(filter(lambda game: not game.is_end(), self._games))
+            print(game._team1_fans, game._team2_fans)
+        self._games = list(filter(lambda game_i: not game_i.is_end(), self._games))
 
     def get_teams(self):
         return self._teams

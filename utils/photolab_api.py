@@ -5,8 +5,41 @@ import os
 from utils.used_dict import *
 from random import randint
 
+post_types = ['stadium',
+              'faceball',
+              'versus',
+              'goal',
+              'miss',
+              'city_info',
+              'final_post'
+              ]
 
-def post2photlab_versus(photos, teams):
+def post_photolab_photo(post_type, args):
+    """
+           Generate photo
+           post_type - type from post_types list
+           args - list of urls photos as type str
+
+           example:
+                post_type = 'stadium'
+                args = ['Moscow', 'http://www.wallpapersin4k.org/wp-content/uploads/2016/12/Man-Wallpapers-3.jpg',
+                'http://games-of-thrones.ru/sites/default/files/pictures/all/Ben%20Affleck/28.jpg']
+    """
+    if not isinstance(post_type, str):
+        print('post type must be str')
+        return ''
+
+    if not isinstance(post_type, list):
+        print('post type must be list')
+        return ''
+
+    if post_type not in post_types:
+        print('unknown type')
+        return ''
+
+    return eval("post2photlab" + post_type)(*args)
+
+def post2photlab_versus(photos: object, teams: object) -> object:
     """
         Generate versus photo
         photos - list of url as type str
@@ -177,7 +210,7 @@ def post2photlab(photo, template):
 
 def get_picture(search_request):
     headers = {
-        'Ocp-Apim-Subscription-Key': '5a34d5fcb6854836a606a6f4bae9477f',
+        'Ocp-Apim-Subscription-Key': '19b79738abc145beac38e42819f80c23',
     }
 
     params = {
@@ -207,7 +240,7 @@ def get_picture(search_request):
 
     return picture_url
 
-def generate_city_photo(city):
+def post2photolab_city_info(city):
     """
         Return url photo of city from yandex and url after photolab.
         city - str
