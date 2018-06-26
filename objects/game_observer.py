@@ -8,7 +8,7 @@ class GameObserver(object):
     _teams = [[]]
 
     def __init__(self):
-        self._score = Score_Matches(date='2018-06-19')
+        self._score = Score_Matches()#date='2018-06-28'
         self._update_daily_games()
         Game._score_matches = self._score
 
@@ -26,7 +26,7 @@ class GameObserver(object):
             self._update_daily_games()
         for game in self._games:
             game.update()
-            print(game._team1_fans, game._team2_fans)
+
         self._games = list(filter(lambda game_i: not game_i.is_end(), self._games))
 
     def get_teams(self):

@@ -27,28 +27,29 @@ class Game:
         if time == '0':
             self._state = 'match_started'
         '''
+        if self._state == 'match_started':
+            score = [response['score_first'], response['score_second']]
+            if score[0].isdigit() and score[1].isdigit():
+                if int(score[0]) != self._score[0] and int(score[1]) != self._score[1]:
+                    if int(score[0]) > self._score[0]:
+                        delta = True
+                    else:
+                        delta = False
 
-        score = [response['score_first'], response['score_second']]
-        if score[0].isdigit() and score[1].isdigit():
-            if score != self._score:
-                if int(score[0]) > self._score[0]:
-                    delta = True
-                else:
-                    delta = False
-                for user in self._team1_fans:
-                    user.score_changed(delta)
-                for user in self._team2_fans:
-                    user.score_changed(delta)
+                    self._score[0] = int(score[0])
+                    self._score[1] = int(score[1])
+
+                    for user in self._team1_fans:
+                        user.score_changed(delta)
+                    for user in self._team2_fans:
+                        user.score_changed(delta)
         self._time_to_game()
 
     def _update_fans_state(self, fans_state1, fans_state2):
-        print(self._team1_fans, self._team2_fans)
         for user in self._team1_fans:
-            print(fans_state1)
             user.set_state(fans_state1)
             user.dialog_update()
         for user in self._team2_fans:
-            print(fans_state2)
             user.set_state(fans_state2)
             user.dialog_update()
 
@@ -66,25 +67,21 @@ class Game:
         if hours == 23 and minutes == 56:
             self._state = 'end_game'
 
-        if hours == 0 and minutes == 2:
+        if hours == 0 and minutes == 3:
             self._state = 'city_info'
-        if hours == 0 and minutes == 1:
+        if hours == 0 and minutes == 2:
             self._state = 'warming'
         if state != self._state:
-            print(self)
             self._update_fans_state(self._state, self._state)
 
     def is_end(self):
         return self._state == 'end_game'
 
     def add_fan(self, user):
-        print(self)
         if user.current_lovely_team == self._teams[0]:
             self._team1_fans.append(user)
-            print(self._team1_fans)
         else:
             self._team2_fans.append(user)
-            print(self._team2_fans)
         user.game = self
 
     def get_teams(self):
@@ -92,6 +89,9 @@ class Game:
 
     def get_city(self):
         return self._city
+
+    def get_score(self):
+        return self._score
 
     def generate_info_about_city(self):
         return ''

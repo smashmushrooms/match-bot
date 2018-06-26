@@ -4,15 +4,9 @@ import numpy as np
 import os
 from utils.used_dict import *
 from random import randint
+import json
+from collections import OrderedDict
 
-post_types = ['stadium',
-              'faceball',
-              'versus',
-              'goal',
-              'miss',
-              'city_info',
-              'final_post'
-              ]
 
 def post_photolab_photo(post_type, args):
     """
@@ -29,17 +23,18 @@ def post_photolab_photo(post_type, args):
         print('post type must be str')
         return ''
 
-    if not isinstance(post_type, list):
+    if not isinstance(args, list):
         print('post type must be list')
         return ''
 
     if post_type not in post_types:
-        print('unknown type')
+        print('unknown type ' + post_type)
         return ''
 
-    return eval("post2photlab" + post_type)(*args)
+    return post_types[post_type](*args)
 
-def post2photlab_versus(photos: object, teams: object) -> object:
+
+def _post2photlab_versus(photos, teams, score, city):
     """
         Generate versus photo
         photos - list of url as type str
@@ -58,6 +53,10 @@ def post2photlab_versus(photos: object, teams: object) -> object:
         print('teams must be list')
         return ''
 
+    if not isinstance(score, list):
+        print('score must be list')
+        return ''
+
     if len(photos) != 2:
         print('len photos must be equal 2')
         return ''
@@ -66,12 +65,20 @@ def post2photlab_versus(photos: object, teams: object) -> object:
         print('len teams must be equal 2')
         return ''
 
+    if len(score) != 2:
+        print('len score must be equal 2')
+        return ''
+
     if not isinstance(photos[0], str) or not isinstance(photos[1], str):
         print('each element of photos must be str')
         return ''
 
     if not isinstance(teams[0], str) or not isinstance(teams[1], str):
         print('each element of teams must be str')
+        return ''
+
+    if not isinstance(score[0], int) or not isinstance(score[1], int):
+        print('each element of score must be int')
         return ''
 
     if teams[0] not in country_flag:
@@ -87,18 +94,26 @@ def post2photlab_versus(photos: object, teams: object) -> object:
     url3 = country_flag[teams[0]]
     url4 = country_flag[teams[1]]
 
-    files = {'image_url[1]': (None, url1),
-             'image_url[2]': (None, url2),
-             'image_url[3]': (None, url3),
-             'image_url[4]': (None, url4),
-             'template_name': (None, templates_names['versus'])}
+    url5 = numbers[score[0]]
+    url6 = numbers[score[1]]
+
+    url7 = city2stadium[city]
+
+    files = (('image_url[1]', (None, url1)),
+             ('image_url[2]', (None, url2)),
+             ('image_url[3]', (None, url3)),
+             ('image_url[4]', (None, url4)),
+             ('image_url[5]', (None, url5)),
+             ('image_url[6]', (None, url6)),
+             ('image_url[7]', (None, url7)),
+             ('template_name', (None, templates_names['versus'][1])))
 
     response = requests.post(URL, files=files)
 
     return response.text
 
 
-def post2photlab_final_post(photos, team, stadium):
+def _post2photlab_final_post(photos, team, stadium):
     """
     Generate final photo with users
     photos - list of urls of users as type str
@@ -127,18 +142,27 @@ def post2photlab_final_post(photos, team, stadium):
     urls.append(country_flag[team])
     urls.append(city2stadium[stadium])
 
-    files = {}
-    for i in range(13):
-        files['image_url['+str(i+1)+']'] = (None, urls[i])
-
-    files['template_name'] = (None, templates_names['final_post'])
+    files = (('image_url[1]', (None, urls[1])),
+             ('image_url[2]', (None, urls[2])),
+             ('image_url[3]', (None, urls[3])),
+             ('image_url[4]', (None, urls[4])),
+             ('image_url[5]', (None, urls[5])),
+             ('image_url[6]', (None, urls[6])),
+             ('image_url[7]', (None, urls[7])),
+             ('image_url[8]', (None, urls[8])),
+             ('image_url[9]', (None, urls[9])),
+             ('image_url[10]', (None, urls[10])),
+             ('image_url[11]', (None, urls[11])),
+             ('image_url[12]', (None, urls[12])),
+             ('image_url[13]', (None, urls[13])),
+             ('template_name', (None, templates_names['final_post'])))
 
     response = requests.post(URL, files=files)
 
     return response.text
 
 
-def post2photlab_stadium(photo, country, city):
+def _post2photlab_stadium(photo, country, city):
     """
         Generate photo by template
         photos - url - str
@@ -170,17 +194,15 @@ def post2photlab_stadium(photo, country, city):
         print('unknown name of city')
         return ''
 
-    files = {'image_url[1]': (None, photo),
-             'image_url[2]': (None, country_flag[country]),
-             'image_url[3]': (None, city2stadium[city]),
-             'template_name': (None, templates_names['stadium'])}
-
-    response = requests.post(URL, files=files)
+    response = requests.post(URL, files=(('image_url[1]', (None, photo)),
+                                         ('image_url[2]', (None, country_flag[country])),
+                                         ('image_url[3]', (None, city2stadium[city])),
+                                         ('template_name', (None, templates_names['stadium']))))
 
     return response.text
 
 
-def post2photlab(photo, template):
+def _post2photlab(photo, template):
     """
         Generate photo by template
         photos - url - str
@@ -201,12 +223,13 @@ def post2photlab(photo, template):
     if template not in templates_names:
         print('unknown name of template')
 
-    files = {'image_url[1]': (None, photo),
-             'template_name': (None, templates_names[template])}
+    files = (('image_url[1]', (None, photo)),
+             ('template_name', (None, templates_names[template])))
 
     response = requests.post(URL, files=files)
 
     return response.text
+
 
 def get_picture(search_request):
     headers = {
@@ -240,7 +263,8 @@ def get_picture(search_request):
 
     return picture_url
 
-def post2photolab_city_info(city):
+
+def _post2photolab_city_info(city):
     """
         Return url photo of city from yandex and url after photolab.
         city - str
@@ -249,17 +273,14 @@ def post2photolab_city_info(city):
     url = get_picture(city)
     template = 'nature_' + str(np.random.choice(range(1, 7)))
 
-    new_url = post2photlab(url, template)
+    new_url = _post2photlab(url, template)
 
     return url, new_url
 
 
-
-
-
-
-
-
-
-
-
+post_types = {'stadium': _post2photlab_stadium,
+              'versus': _post2photlab_versus,
+              'one_simple_shot': _post2photlab,
+              'city_info': _post2photolab_city_info,
+              'final_post': _post2photlab_final_post
+              }

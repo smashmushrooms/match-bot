@@ -2,10 +2,10 @@ import requests
 
 from threading import Thread
 from time import sleep
-from japronto import Application
+#from japronto import Application
 from functools import wraps
 from sys import stderr
-
+from flask import Flask, request
 from objects import GameObserver
 from objects import User
 from re import sub
@@ -17,6 +17,7 @@ users = {}
 
 User._game_observer = game_observer
 
+app = Flask(__name__)
 
 def response_text_decorator(func):
     @wraps(func)
@@ -27,9 +28,9 @@ def response_text_decorator(func):
 
 
 # We will receive messages that Facebook sends our bot at this endpoint
-# @app.route("/", methods=['GET', 'POST'])
-@response_text_decorator
-def receive_message(request):
+@app.route("/", methods=['GET', 'POST'])
+#@response_text_decorator
+def receive_message():
     if request.method == 'GET':
         """Before allowing people to message your bot, Facebook has implemented a verify token
         that confirms all requests that your bot receives came from Facebook."""
@@ -39,14 +40,15 @@ def receive_message(request):
                     print(attr, getattr(request, attr))
                 except Exception:
                     print(attr, file=stderr)
-        token_sent = request.query.get("hub.verify_token")
+        token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(request, token_sent)
     else:
-        body_str = request.body.decode()
-        body_str = sub('true', 'True', body_str)
-        body_str = sub('false', 'False', body_str)
-        body_str = sub('null', 'None', body_str)
-        output = eval(body_str)
+        output = request.get_json()
+        #body_str = request.body.decode()
+        #body_str = sub('true', 'True', body_str)
+        #body_str = sub('false', 'False', body_str)
+        #body_str = sub('null', 'None', body_str)
+        #output = eval(body_str)
         print(output)
         for event in output['entry']:
             if 'messaging' in event:
@@ -97,7 +99,7 @@ def receive_message(request):
 
 def verify_fb_token(request, token_sent):
     if token_sent == VERIFY_TOKEN:
-        return request.query.get("hub.challenge")
+        return request.args.get("hub.challenge")
     return 'Invalid verification token'
 
 
@@ -228,8 +230,8 @@ if __name__ == "__main__":
     observer_thread = ObserverThread()
     observer_thread.start()
 
-    app = Application()
-    app.router.add_route('/', receive_message, methods=['GET', 'POST'])
-    app.run(host='0.0.0.0', port=8080, worker_num=1)
+    #app = Application()
+    #app.router.add_route('/', receive_message, methods=['GET', 'POST'])
+    app.run(host='0.0.0.0', port=8080, debug=False)
 
     observer_thread.join()

@@ -49,6 +49,7 @@ class Score_Matches(object):
         self._dict_match = {}
         self._url = False
         self._get_matches()
+        print(self._dict_match)
 
     def _check_date(self):
         """

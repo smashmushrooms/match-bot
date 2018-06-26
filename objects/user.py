@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import os
 import utils.photolab_api as pl
@@ -7,6 +8,7 @@ from pymessenger import Button
 from pymessenger.bot import Bot
 from numpy import random
 from sys import stderr
+import binascii
 
 
 def get_random_object(objects):
@@ -27,8 +29,7 @@ class Dialog(object):
             'start': 'get_selfie',
             'get_selfie': 'get_match',
             'get_match': 'get_team',
-            'get_team': 'game_info',
-            'game_info': 'city_info',
+            'get_team': 'city_info',
             'city_info': 'warming',
             'warming': 'start_game',
             'start_game': 'game_in_process',
@@ -64,9 +65,9 @@ class Dialog(object):
             'I am MatchBot'
         ]
         photo_requests = [
-            'I need your photo, take a selfie, please',
-            'I need your selfie, send it to me, please',
-            'Please, send your selfie'
+            'I need your photo, take a selfie, please 📸',
+            'I need your selfie, send it to me, please 📷',
+            'Please, send your selfie 📸'
         ]
 
         message_parts = [get_random_object(part_variations)
@@ -84,37 +85,40 @@ class Dialog(object):
 
     def choose_match(self, games):
         buttons = []
+        i = 0
         for teams in games:
+            i += 1
             buttons.append([teams[0] + ' - ' + teams[1], 'postback'])
+            if i == 3:
+                break
 
         match_requests = [
-            'Choose your favorite match today',
+            'Choose your favorite match today 🔥🔥🔥',
             'What is the match you wanna observe?',
-            'What is the match you wanna track?',
-            'What match do you prefer today?'
+            'What is the match you wanna track? ♥♥♥',
+            'What match do you prefer today? ⚽'
         ]
 
         self.send_buttons(buttons, get_random_object(match_requests))
 
     def choose_side(self, teams):
         side_requests = [
-            'Choose your side',
-            'Who do you support?',
-            'Who would win?'
+            'Choose your side 🙈',
+            'Who do you support? 💪',
+            'Who would win? 🏆'
         ]
 
         self.quick_reply_send([[teams[0], teams[0], ''], [teams[1], teams[1], '']],
                               get_random_object(side_requests))
 
     def start_tracking(self):
-        bot.send_text_message(self._id, 'Thank you! Wait for updates')
+        bot.send_text_message(self._id, 'Thank you! Wait for updates ⌛')
 
-    def send_city_info(self, image_url, team_flag_url, stadium_photo_url):
-        url = pl.post2photlab_stadium(image_url, team_flag_url, stadium_photo_url)
+    def send_game_info(self, image_url, team_flag_url, stadium_photo_url):
+        url = pl.post_photolab_photo('stadium', [image_url, team_flag_url, stadium_photo_url])
         text = self.game.generate_info_about_game()
 
-        self.send_message(text)
-        self.send_image_url(url)
+        self.share_button(url, text)
 
     def send_message(self, response):
         bot.send_text_message(self._id, response)
@@ -154,6 +158,46 @@ class Dialog(object):
             quick_replies.append(quick_reply)
         return quick_replies
 
+    def share_button(self, image_url, text):
+        bot.send_text_message(self._id, text)
+        bot.send_image_url(self._id, image_url)
+        share_btn = [{
+            "title": "Share me with friends",
+            "image_url": image_url,
+            "buttons": [
+                {
+                    "type": "element_share",
+                    "share_contents": {
+                        "attachment": {
+                            "type": "template",
+                            "payload": {
+                                "template_type": "generic",
+                                "elements": [
+                                    {
+                                        "title": "Your friend is using The World Championship photo bot",
+                                        "subtitle": "Try it too",
+                                        "image_url": image_url,
+                                        "default_action": {
+                                            "type": "web_url",
+                                            "url": "https://photolab.me"
+                                        },
+                                        "buttons": [
+                                            {
+                                                "type": "web_url",
+                                                "url": "https://www.facebook.com/messages/t/photolabmatchbot",
+                                                "title": "Join The World Championship photo bot"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        }]
+        print(bot.send_generic_message(self._id, share_btn))
+
     def set_game_observer(self, observer):
         self._game_observer = observer
 
@@ -162,6 +206,26 @@ class Dialog(object):
 
     def set_state(self, state):
         self._state.set_state(state)
+
+    def goal(self, image_url, team):
+        url = pl.post_photolab_photo('one_simple_shot', [image_url, 'happy'])
+        goal_text = [
+            'Amazing goal! Let\'s share your photo and happiness with friends ' + '😆',
+            'We scored! Forward ' + team,
+            'The whole country rejoices with you! Goooooal! Your friends must know about that!' + '😁'
+        ]
+
+        self.share_button(url, get_random_object(goal_text))
+
+    def miss(self, image_url):
+        url = pl.post_photolab_photo('one_simple_shot', [image_url, 'cry'])
+        miss_text = [
+            'Do not worry, we still have time to score today ' + '😣',
+            'Well, missed, now have to play more accurately ' + '😥',
+            'Ah, missed the goal... But how cool you got the pictures! ' + '😜'
+        ]
+
+        self.share_button(url, get_random_object(miss_text))
 
 
 class User(Dialog):
@@ -192,12 +256,10 @@ class User(Dialog):
             self.miss_state()
 
     def goal_state(self):
-        pass
-        # TODO
+        self.goal(self._image_url, self.current_lovely_team)
 
     def miss_state(self):
-        pass
-        # TODO
+        self.miss(self._image_url)
 
     def dialog_update(self, text=None, tag=None):
         print('Dialog is updating', file=stderr)
@@ -222,6 +284,9 @@ class User(Dialog):
 
         elif curr_dialog_state == 'get_match':
             games = self._game_observer.get_teams()
+            if len(games) == 0:
+                self.send_message('There are no games today 😭 See you later!')
+                return
             teams = text.split(' - ')
             if teams not in games:
                 self.choose_match(games)
@@ -238,64 +303,77 @@ class User(Dialog):
                 self.choose_side(self.teams_)
                 return
 
-            del self.teams_
+            if self.current_lovely_team != '':
+                return ''
+
             self.current_lovely_team = text
             self._game_observer.add_fan(self)
-            curr_dialog_state.turn_next()
-            self.dialog_update()
-
-        elif curr_dialog_state == 'game_info':
             stadium_photo_url = self.game.get_city()
-
-            self.send_city_info(self._image_url, self.current_lovely_team, stadium_photo_url)
             self.start_tracking()
+
+            self.send_game_info(self._image_url, self.current_lovely_team, stadium_photo_url)
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'city_info':
+            if text is not None:
+                return ''
+
             city = self.game._score_matches.get_city(self.game.get_teams())
-            url, fixed_url = pl.generate_city_photo(city)
+            url, fixed_url = pl.post_photolab_photo('city_info', [city])
 
             text = self.game.generate_info_about_city()
 
             self.send_message(text)
             self.send_image_url(url)
             self.send_image_url(fixed_url)
-
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'warming':
-            url = pl.post2photlab(photo=self._image_url, template='soccer_man')
+            if text is not None:
+                return ''
+
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'face_ball'])
             text = 'Only a couple of hours left until the match! All warm up!'
+            self.share_button(url, text)
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'start_game':
+            if text is not None:
+                return ''
+
             if self.current_lovely_team == self.game.get_teams()[0]:
-                print(self.game._team2_fans)
-                opponent_photo_url = get_random_object(self.game._team2_fans).get_image_url()
-                url = pl.post2photlab_versus(photos=[self._image_url, opponent_photo_url],
-                                             teams=self.game.get_teams())
+                #opponent_photo_url = get_random_object(self.game._team2_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
             else:
-                opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
-                print(self.game._team1_fans)
-                url = pl.post2photlab_versus(photos=[opponent_photo_url, self._image_url],
-                                             teams=self.game.get_teams())
+                #opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
 
             text = 'Today\'s match will be watched by millions of people around the world. ' \
                    'Here goes your personal opponent from the opposite side... Let the battle begin!'
 
+            self.share_button(url, text)
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'game_in_progress':
+            if text is not None:
+                return ''
+
             curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'end_game':
+            if text is not None:
+                return ''
+
             city_name = self.game._score_matches.get_city(self.game.get_teams())
-            print(self.game._team1_fans)
-            url = pl.post2photlab_final_post([fan._image_url for fan in self.game._team1_fans],
-                                             self.current_lovely_team, city_name)
+            url = pl.post_photolab_photo('final_post', [[fan._image_url for fan in self.game._team1_fans],
+                                             self.current_lovely_team, city_name])
 
             text = 'This is the end of the match! Well done, fans!'
 
+            self.share_button(url, text)
             curr_dialog_state.turn_next()
+            self.dialog_update()
         else:
             raise ValueError('Undefined state')
