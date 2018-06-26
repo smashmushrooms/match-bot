@@ -27,14 +27,15 @@ class Dialog(object):
     class State(object):
         prev_to_next = {
             'start': 'get_selfie',
-            'get_selfie': 'get_match',
+            'get_selfie': 'send_match_list',
+            'send_match_list': 'get_match',
             'get_match': 'get_team',
             'get_team': 'city_info',
             'city_info': 'warming',
             'warming': 'start_game',
             'start_game': 'game_in_process',
             'game_in_process': 'end_game',
-            'end_game': 'get_match'
+            'end_game': 'send_match_list'
         }
 
         def __eq__(self, other):
@@ -208,24 +209,23 @@ class Dialog(object):
         self._state.set_state(state)
 
     def goal(self, image_url, team):
-        url = pl.post_photolab_photo('one_simple_shot', [image_url, 'happy'])
+
         goal_text = [
             'Amazing goal! Let\'s share your photo and happiness with friends ' + '😆',
             'We scored! Forward ' + team,
             'The whole country rejoices with you! Goooooal! Your friends must know about that!' + '😁'
         ]
 
-        self.share_button(url, get_random_object(goal_text))
+        self.share_button(image_url, get_random_object(goal_text))
 
     def miss(self, image_url):
-        url = pl.post_photolab_photo('one_simple_shot', [image_url, 'cry'])
         miss_text = [
             'Do not worry, we still have time to score today ' + '😣',
             'Well, missed, now have to play more accurately ' + '😥',
             'Ah, missed the goal... But how cool you got the pictures! ' + '😜'
         ]
 
-        self.share_button(url, get_random_object(miss_text))
+        self.share_button(image_url, get_random_object(miss_text))
 
 
 class User(Dialog):
@@ -256,10 +256,40 @@ class User(Dialog):
             self.miss_state()
 
     def goal_state(self):
-        self.goal(self._image_url, self.current_lovely_team)
+        score = self.game.get_score()
+        if score[0] + score[1] % 3 == 2:
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'happy'])
+        elif score[0] + score[1] % 3 == 1:
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'face_ball'])
+        else:
+            if self.current_lovely_team == self.game.get_teams()[0]:
+                #opponent_photo_url = get_random_object(self.game._team2_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
+            else:
+                #opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
+
+        self.goal(url, self.current_lovely_team)
 
     def miss_state(self):
-        self.miss(self._image_url)
+        score = self.game.get_score()
+        if score[0] + score[1] % 3 == 2:
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'cry'])
+        elif score[0] + score[1] % 3 == 1:
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'face_ball'])
+        else:
+            if self.current_lovely_team == self.game.get_teams()[0]:
+                #opponent_photo_url = get_random_object(self.game._team2_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
+            else:
+                #opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
+                url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
+                                             self.game.get_teams(), self.game.get_score(), self.game.get_city()])
+
+        self.miss(url)
 
     def dialog_update(self, text=None, tag=None):
         print('Dialog is updating', file=stderr)
@@ -278,9 +308,13 @@ class User(Dialog):
             self._image_url = text
 
             curr_dialog_state.turn_next()
+            self.dialog_update()
+
+        elif curr_dialog_state == 'send_match_list':
 
             games = self._game_observer.get_teams()
             self.choose_match(games)
+            curr_dialog_state.turn_next()
 
         elif curr_dialog_state == 'get_match':
             games = self._game_observer.get_teams()
@@ -332,7 +366,8 @@ class User(Dialog):
             if text is not None:
                 return ''
 
-            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'face_ball'])
+            url = pl.post_photolab_photo('one_simple_shot', [self._image_url, 'happy'])
+            print(url)
             text = 'Only a couple of hours left until the match! All warm up!'
             self.share_button(url, text)
             curr_dialog_state.turn_next()
@@ -349,6 +384,7 @@ class User(Dialog):
                 #opponent_photo_url = get_random_object(self.game._team1_fans).get_image_url()
                 url = pl.post_photolab_photo('versus', [[self._image_url, self._image_url],
                                              self.game.get_teams(), self.game.get_score(), self.game.get_city()])
+            # self._opponent = opponent_photo_url
 
             text = 'Today\'s match will be watched by millions of people around the world. ' \
                    'Here goes your personal opponent from the opposite side... Let the battle begin!'
@@ -374,6 +410,7 @@ class User(Dialog):
 
             self.share_button(url, text)
             curr_dialog_state.turn_next()
+            self.current_lovely_team = ''
             self.dialog_update()
         else:
             raise ValueError('Undefined state')

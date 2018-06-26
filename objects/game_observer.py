@@ -27,7 +27,10 @@ class GameObserver(object):
         for game in self._games:
             game.update()
 
-        self._games = list(filter(lambda game_i: not game_i.is_end(), self._games))
+        for i, game in enumerate(self._games):
+            if game.is_end():
+                del self._teams[i]
+                del self._games[i]
 
     def get_teams(self):
         return self._teams
